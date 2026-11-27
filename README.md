@@ -11,7 +11,13 @@ A free-first, browser-based 3D open-world game inspired by Dhaka, Bangladesh.
 - Original assets and fictionalized/condensed city layout
 
 ## Development status
-**Phase 0 — Foundation**. This repository is being initialized with a lightweight playable blockout before detailed city assets are added.
+**Phase 0 — Playable blockout**. The prototype currently includes a sedan/CNG switch, a compact Dhanmondi-inspired loop, basic obstacle collision, a follow camera, and road/off-road handling. The map, vehicle models, and physics are still placeholders; browser/device playtesting is pending.
+
+## Prototype controls
+- WASD / arrow keys: drive and steer
+- Space: brake
+- V: switch between sedan and CNG placeholder
+- Road HUD: shows whether the vehicle is on a mapped road; off-road driving has reduced acceleration and traction
 
 ## Local development
 ```bash
