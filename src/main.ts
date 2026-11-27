@@ -132,6 +132,10 @@ let velocity = 0;
 let steer = 0;
 addEventListener('keydown', (e) => { keys.add(e.code); keys.add(e.key.toLowerCase()); if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); keys.delete(e.key.toLowerCase()); });
+addEventListener('blur', () => keys.clear());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) keys.clear();
+});
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
   const down = (e: Event) => { e.preventDefault(); keys.add(key); };
@@ -178,14 +182,22 @@ const drivableRoads = [
   { minX: 53, maxX: 63, minZ: -29, maxZ: 9 },
   { minX: 29, maxX: 87, minZ: -63, maxZ: -53 }
 ];
-function isOnRoad(position: THREE.Vector3) {
+function roadCoverage(position: THREE.Vector3) {
   const footprint = getVehicleFootprint(position);
-  const centerX = (footprint.min.x + footprint.max.x) / 2;
-  const centerZ = (footprint.min.y + footprint.max.y) / 2;
-  return drivableRoads.some(road =>
-    centerX >= road.minX && centerX <= road.maxX &&
-    centerZ >= road.minZ && centerZ <= road.maxZ
-  );
+  const width = footprint.max.x - footprint.min.x;
+  const length = footprint.max.y - footprint.min.y;
+  const footprintArea = Math.max(width * length, 0.001);
+  let coveredArea = 0;
+  for (const road of drivableRoads) {
+    const overlapX = Math.max(0, Math.min(footprint.max.x, road.maxX) - Math.max(footprint.min.x, road.minX));
+    const overlapZ = Math.max(0, Math.min(footprint.max.y, road.maxZ) - Math.max(footprint.min.y, road.minZ));
+    coveredArea += overlapX * overlapZ;
+  }
+  // Road rectangles meet at junctions, so cap the summed coverage.
+  return Math.min(coveredArea / footprintArea, 1);
+}
+function isOnRoad(position: THREE.Vector3) {
+  return roadCoverage(position) >= 0.62;
 }
 function hitsLoopCurb(position: THREE.Vector3) {
   const footprint = getVehicleFootprint(position);
