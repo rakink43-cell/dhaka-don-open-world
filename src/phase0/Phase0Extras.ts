@@ -2,7 +2,8 @@ import * as THREE from 'three';
 
 export type VehicleMode = 'SEDAN' | 'CNG';
 
-export function addDhanmondiLoop(scene: THREE.Scene) {
+export function addDhanmondiLoop(scene: THREE.Scene): THREE.Box3[] {
+  const curbBounds: THREE.Box3[] = [];
   const roadMaterial = new THREE.MeshStandardMaterial({ color: '#3b4145', roughness: 0.96 });
   const curbMaterial = new THREE.MeshStandardMaterial({ color: '#c7c4b9', roughness: 1 });
   const waterMaterial = new THREE.MeshStandardMaterial({ color: '#4d9da8', roughness: 0.32, metalness: 0.05 });
@@ -25,6 +26,7 @@ export function addDhanmondiLoop(scene: THREE.Scene) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, d), curbMaterial);
     mesh.position.set(x, 0.19, z);
     scene.add(mesh);
+    curbBounds.push(new THREE.Box3().setFromObject(mesh));
   };
   curb(94, 1.2, cx, cz - 44);
   curb(94, 1.2, cx, cz + 44);
@@ -64,6 +66,7 @@ export function addDhanmondiLoop(scene: THREE.Scene) {
     lamp.position.set(x, 5.45, z);
     scene.add(lamp);
   }
+  return curbBounds;
 }
 
 export function installCngSwitch(car: THREE.Group) {
