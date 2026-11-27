@@ -7,6 +7,9 @@ const speedLabel = document.querySelector<HTMLElement>('#speed')!;
 const roadStatus = document.querySelector<HTMLElement>('#road-status')!;
 const introCard = document.querySelector<HTMLElement>('#intro-card')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start-button')!;
+const pauseButton = document.querySelector<HTMLButtonElement>('#pause-button')!;
+const pauseOverlay = document.querySelector<HTMLElement>('#pause-overlay')!;
+const resumeButton = document.querySelector<HTMLButtonElement>('#resume-button')!;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#9bbcc9');
@@ -128,9 +131,19 @@ const vehicle = installCngSwitch(car);
 
 const keys = new Set<string>();
 let started = false;
+let paused = false;
 let velocity = 0;
 let steer = 0;
-addEventListener('keydown', (e) => { keys.add(e.code); keys.add(e.key.toLowerCase()); if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
+addEventListener('keydown', (e) => {
+  if (e.code === 'Escape') {
+    e.preventDefault();
+    if (started) setPaused(!paused);
+    return;
+  }
+  keys.add(e.code);
+  keys.add(e.key.toLowerCase());
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+});
 addEventListener('keyup', (e) => { keys.delete(e.code); keys.delete(e.key.toLowerCase()); });
 addEventListener('blur', () => keys.clear());
 document.addEventListener('visibilitychange', () => {
@@ -146,7 +159,18 @@ document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   button.addEventListener('pointercancel', up);
 });
 
-startButton.addEventListener('click', () => { started = true; introCard.classList.add('hidden'); });
+function setPaused(next: boolean) {
+  if (!started) return;
+  paused = next;
+  keys.clear();
+  pauseOverlay.classList.toggle('hidden', !paused);
+  pauseOverlay.setAttribute('aria-hidden', String(!paused));
+  pauseButton.textContent = paused ? 'RESUME' : 'PAUSE';
+  pauseButton.setAttribute('aria-label', paused ? 'Resume game' : 'Pause game');
+}
+startButton.addEventListener('click', () => { started = true; introCard.classList.add('hidden'); setPaused(false); });
+pauseButton.addEventListener('click', () => setPaused(!paused));
+resumeButton.addEventListener('click', () => setPaused(false));
 
 const desiredCamera = new THREE.Vector3();
 const lakeBounds = new THREE.Box2(
@@ -253,7 +277,7 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
-  if (started) {
+  if (started && !paused) {
     vehicle.update(keys);
     velocity = THREE.MathUtils.clamp(velocity, -7, vehicle.maxSpeed);
     const forward = keys.has('KeyW') || keys.has('w') || keys.has('ArrowUp');
