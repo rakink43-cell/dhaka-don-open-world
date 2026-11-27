@@ -155,8 +155,9 @@ document.addEventListener('visibilitychange', () => {
     if (started) setPaused(true);
   }
 });
-document.addEventListener('pointerup', () => keys.clear());
-document.addEventListener('pointercancel', () => keys.clear());
+const releaseTouchKeys = () => document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => keys.delete(button.dataset.key!));
+document.addEventListener('pointerup', releaseTouchKeys);
+document.addEventListener('pointercancel', releaseTouchKeys);
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
   const down = (e: Event) => { e.preventDefault(); keys.add(key); };
