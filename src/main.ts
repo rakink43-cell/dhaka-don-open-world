@@ -215,11 +215,9 @@ function roadCoverage(position: THREE.Vector3) {
       .sort((a, b) => a.min - b.min);
 
     let coveredLength = 0;
-    let intervalStart = 0;
     let intervalEnd = 0;
     for (const interval of intervals) {
       if (coveredLength === 0) {
-        intervalStart = interval.min;
         intervalEnd = interval.max;
         coveredLength = intervalEnd - intervalStart;
       } else if (interval.min <= intervalEnd) {
@@ -228,7 +226,6 @@ function roadCoverage(position: THREE.Vector3) {
         intervalEnd = Math.max(intervalEnd, interval.max);
       } else {
         coveredArea += sliceWidth * coveredLength;
-        intervalStart = interval.min;
         intervalEnd = interval.max;
         coveredLength = intervalEnd - intervalStart;
       }
