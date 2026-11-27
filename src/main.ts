@@ -62,6 +62,7 @@ for (let i = -100; i <= 100; i += 12) {
 addDhanmondiLoop(scene);
 
 // Low-poly Dhaka-inspired building blocks with colorful shop-level accents.
+const solidBuildings: THREE.Box3[] = [];
 const palette = ['#c8b49b', '#d8c9ad', '#b7c1b8', '#d0b6a5', '#9faeb2', '#d8d1bf'];
 let seed = 17;
 const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
@@ -71,7 +72,8 @@ for (let x = -78; x <= 78; x += 26) {
     const w = 13 + random() * 7;
     const d = 13 + random() * 7;
     const h = 8 + random() * 28;
-    box(w, h, d, palette[Math.floor(random() * palette.length)], x, 0.14, z);
+    const building = box(w, h, d, palette[Math.floor(random() * palette.length)], x, 0.14, z);
+    solidBuildings.push(new THREE.Box3().setFromObject(building));
     // Roof tank / rooftop room.
     if (random() > 0.45) box(w * 0.35, 2.1, d * 0.3, '#8c9695', x - 1, h + 0.14, z);
     // Storefront color strip facing nearby road.
@@ -138,12 +140,31 @@ document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
 startButton.addEventListener('click', () => { started = true; introCard.classList.add('hidden'); });
 
 const desiredCamera = new THREE.Vector3();
+const lakeBounds = new THREE.Box2(
+  new THREE.Vector2(58 - 31, -58 - 24),
+  new THREE.Vector2(58 + 31, -58 + 24)
+);
+function overlapsLake(position: THREE.Vector3) {
+  return lakeBounds.containsPoint(new THREE.Vector2(position.x, position.z));
+}
+function hitsBuilding(position: THREE.Vector3) {
+  const carMinX = position.x - 1.2;
+  const carMaxX = position.x + 1.2;
+  const carMinZ = position.z - 2.25;
+  const carMaxZ = position.z + 2.25;
+  return solidBuildings.some(bounds =>
+    carMaxX > bounds.min.x && carMinX < bounds.max.x &&
+    carMaxZ > bounds.min.z && carMinZ < bounds.max.z
+  );
+}
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
   if (started) {
     vehicle.update(keys);
+    velocity = THREE.MathUtils.clamp(velocity, -7, vehicle.maxSpeed);
+    const previousPosition = car.position.clone();
     const forward = keys.has('KeyW') || keys.has('w') || keys.has('ArrowUp');
     const reverse = keys.has('KeyS') || keys.has('s') || keys.has('ArrowDown');
     const left = keys.has('KeyA') || keys.has('a') || keys.has('ArrowLeft');
