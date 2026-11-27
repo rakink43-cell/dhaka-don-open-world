@@ -219,7 +219,7 @@ function roadCoverage(position: THREE.Vector3) {
     for (const interval of intervals) {
       if (coveredLength === 0) {
         intervalEnd = interval.max;
-        coveredLength = intervalEnd - intervalStart;
+        coveredLength = intervalEnd - interval.min;
       } else if (interval.min <= intervalEnd) {
         const added = Math.max(0, interval.max - intervalEnd);
         coveredLength += added;
