@@ -70,6 +70,8 @@ const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2
 for (let x = -78; x <= 78; x += 26) {
   for (let z = -78; z <= 78; z += 26) {
     if (Math.abs(x) < 18 || Math.abs(z) < 18) continue;
+    // Keep the lake-loop district clear so its roads and water remain visible.
+    if (x >= 20 && x <= 96 && z <= -20 && z >= -96) continue;
     const w = 13 + random() * 7;
     const d = 13 + random() * 7;
     const h = 8 + random() * 28;
