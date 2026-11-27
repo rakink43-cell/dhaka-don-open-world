@@ -154,7 +154,9 @@ const lakeBounds = new THREE.Box2(
   new THREE.Vector2(58 + 31, -58 + 24)
 );
 function overlapsLake(position: THREE.Vector3) {
-  return lakeBounds.containsPoint(new THREE.Vector2(position.x, position.z));
+  const footprint = getVehicleFootprint(position);
+  return footprint.max.x > lakeBounds.min.x && footprint.min.x < lakeBounds.max.x &&
+    footprint.max.y > lakeBounds.min.y && footprint.min.y < lakeBounds.max.y;
 }
 function getVehicleFootprint(position: THREE.Vector3) {
   const halfWidth = 1.2;
@@ -278,16 +280,16 @@ function animate() {
 
     // Resolve movement per axis: the car can slide along walls instead of
     // snapping backward whenever one corner touches an obstacle.
-    car.position.x += moveX;
-    car.position.x = THREE.MathUtils.clamp(car.position.x, -120, 120);
+    const previousX = car.position.x;
+    car.position.x = THREE.MathUtils.clamp(previousX + moveX, -120, 120);
     if (blocked()) {
-      car.position.x -= moveX;
+      car.position.x = previousX;
       velocity *= 0.92;
     }
-    car.position.z += moveZ;
-    car.position.z = THREE.MathUtils.clamp(car.position.z, -120, 120);
+    const previousZ = car.position.z;
+    car.position.z = THREE.MathUtils.clamp(previousZ + moveZ, -120, 120);
     if (blocked()) {
-      car.position.z -= moveZ;
+      car.position.z = previousZ;
       velocity *= 0.92;
     }
     const onRoadAfterMove = isOnRoad(car.position);
