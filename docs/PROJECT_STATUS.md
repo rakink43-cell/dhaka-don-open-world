@@ -1,6 +1,6 @@
 # Project Status
 
-Updated: 2026-11-27
+Updated: 2026-11-28
 
 ## Current phase
 Phase 0 — foundation / visual blockout
@@ -22,14 +22,13 @@ GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 - Cleared placeholder buildings overlapping the lake-loop road/water area
 - Improved acceleration, rolling friction, braking, reverse steering response, and vehicle-specific footprint
 - Follow camera raycast that moves the camera forward when buildings obstruct it
-- CI build and TypeScript typecheck passing
+- CI typecheck/build status must be checked against the latest commit before marking this item complete
 - Responsive HUD and project documentation
 
 ## Not yet implemented
 - Rapier vehicle physics
 - Browser playtest and handling tuning on target devices
 - Robust road-boundary collision system
-- Accurate collision and road-boundary system
 - Proper CNG/rickshaw model
 - Real Dhaka neighborhood layout and landmarks
 - Bengali signboard asset pipeline
@@ -38,4 +37,6 @@ GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 - Cloudflare Pages production release / final deployment
 
 ## Validation
-GitHub Actions run #18 passed typecheck and build for commit 4c5c4ad, including axis-separated collision, expanded bounds, connecting roads, and lake-district layout cleanup. Cloudflare Pages preview for commit 07f8931 was confirmed at https://28b924e7.dhaka-don-open-world.pages.dev; the newest 4c5c4ad commit's preview deployment has not yet been confirmed. Browser playtesting has not been performed.
+- Commit `0228e90` failed GitHub Actions run #29 at TypeScript typecheck because a disjoint road interval referenced an undefined variable (`intervalStart`).
+- Fixed the interval reset in commit `c5be84c` on branch `phase0-playable-blockout`; latest CI and Cloudflare Pages deployment for this fix are pending verification.
+- Browser/mobile playtesting has not been performed.
