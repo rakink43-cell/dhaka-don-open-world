@@ -133,7 +133,7 @@ car.position.set(0, 0.1, 5);
 scene.add(car);
 const vehicle = installCngSwitch(car);
 const pedestrians = addPedestrians(scene, 26);
-const ambientTraffic = addAmbientTraffic(scene, 5);
+const ambientTraffic = addAmbientTraffic(scene, 8);
 
 const keys = new Set<string>();
 let started = false;
