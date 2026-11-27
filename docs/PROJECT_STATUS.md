@@ -32,7 +32,7 @@ GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 - Bengali signboard asset pipeline
 - NPC traffic / pedestrians
 - Save, mission, minimap systems
-- Cloudflare Pages deployment
+- Cloudflare Pages production release / final deployment
 
 ## Validation
-GitHub Actions run #9 passed typecheck and build for the previous documentation-only commit. Vehicle handling and camera collision improvements are now committed to the PR branch and require a fresh CI run. Cloudflare Pages reported a successful preview deployment for commit 3c7ad98 at https://phase0-playable-blockout.dhaka-don-open-world.pages.dev; latest code commit is not yet confirmed deployed. Browser playtesting has not been performed.
+GitHub Actions run #10 passed typecheck and build for vehicle/camera commit 07f8931. Cloudflare Pages reported a successful preview deployment for that commit at https://28b924e7.dhaka-don-open-world.pages.dev; branch preview URL: https://phase0-playable-blockout.dhaka-don-open-world.pages.dev. Browser playtesting has not been performed.
