@@ -13,6 +13,7 @@
       <header class="hud-top">
         <div class="brand"><span class="brand-mark">DD</span><div><strong>DHAKA-DON</strong><small>OPEN WORLD · PROTOTYPE</small></div></div>
         <div class="location-pill"><span class="live-dot"></span><span id="location-label">DHANMONDI BLOCKOUT</span></div>
+        <div class="hud-actions"><button id="recover-button" class="pause-button recover-button" type="button" aria-label="Reset vehicle to starting point">RESET CAR</button><button id="pause-button" class="pause-button" type="button" aria-label="Pause game">PAUSE</button></div>
       </header>
       <section class="intro-card" id="intro-card">
         <p class="eyebrow">PROJECT BUILD 0.1</p>
@@ -21,13 +22,22 @@
         <button id="start-button">ENTER CITY <span>↗</span></button>
         <div class="card-foot"><span>WASD / ARROWS</span><span>DRIVE & EXPLORE</span></div>
       </section>
+      <section class="pause-overlay hidden" id="pause-overlay" aria-labelledby="pause-title" aria-hidden="true">
+        <div class="pause-card">
+          <p class="eyebrow">CITY SESSION</p>
+          <h2 id="pause-title">PAUSED</h2>
+          <p>Take a break. Your vehicle will stay where you left it.</p>
+          <div class="pause-controls"><span><b>WASD / ARROWS</b> Drive</span><span><b>SPACE</b> Brake</span><span><b>V</b> Switch vehicle</span><span><b>ESC</b> Resume / pause</span></div>
+          <button id="resume-button" type="button">RESUME DRIVE <span>↗</span></button>
+        </div>
+      </section>
       <div class="hud-bottom">
-        <div class="speed-card"><strong id="speed">000</strong><span>KM/H</span></div>
-        <div class="controls-hint"><span>W</span><span>A</span><span>S</span><span>D</span><small>MOVE</small></div>
+        <div class="speed-card"><strong id="speed">000</strong><span>KM/H</span><small id="vehicle-name">SEDAN</small><small id="road-status">ROAD</small></div>
+        <div class="controls-hint"><span>W</span><span>A</span><span>S</span><span>D</span><span>V</span><small>MOVE / VEHICLE</small></div>
       </div>
       <div class="mobile-controls" aria-label="Touch controls">
         <div class="dpad"><button data-key="ArrowUp" aria-label="Forward">▲</button><div><button data-key="ArrowLeft" aria-label="Left">◀</button><button data-key="ArrowDown" aria-label="Back">▼</button><button data-key="ArrowRight" aria-label="Right">▶</button></div></div>
-        <button class="action-button" data-key="Space" aria-label="Brake">BRAKE</button>
+        <button class="action-button" data-key="Space" aria-label="Brake">BRAKE</button><button class="vehicle-button" data-key="KeyV" aria-label="Switch vehicle">V<br/>CAR</button><button class="reset-touch" id="touch-reset" type="button" aria-label="Reset vehicle">RESET</button>
       </div>
       <div class="build-tag">ALPHA · CITY BLOCKOUT</div>
     </div>
