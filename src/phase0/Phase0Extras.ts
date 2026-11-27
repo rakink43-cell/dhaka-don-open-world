@@ -21,6 +21,9 @@ export function addDhanmondiLoop(scene: THREE.Scene): THREE.Box3[] {
   road(112, 10, cx, cz + 51);
   road(10, 92, cx - 51, cz);
   road(10, 92, cx + 51, cz);
+  // Connect the loop back to the original central cross-road.
+  road(10, 58, cx, cz + 29);
+  road(58, 10, cx - 29, cz);
 
   const curb = (w: number, d: number, x: number, z: number) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, d), curbMaterial);
