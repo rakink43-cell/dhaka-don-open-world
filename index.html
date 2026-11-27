@@ -13,6 +13,7 @@
       <header class="hud-top">
         <div class="brand"><span class="brand-mark">DD</span><div><strong>DHAKA-DON</strong><small>OPEN WORLD · PROTOTYPE</small></div></div>
         <div class="location-pill"><span class="live-dot"></span><span id="location-label">DHANMONDI BLOCKOUT</span></div>
+        <button id="pause-button" class="pause-button" type="button" aria-label="Pause game">PAUSE</button>
       </header>
       <section class="intro-card" id="intro-card">
         <p class="eyebrow">PROJECT BUILD 0.1</p>
@@ -20,6 +21,15 @@
         <p>A first playable city block. The roads, skyline and vehicle scale are placeholders while the world is being built.</p>
         <button id="start-button">ENTER CITY <span>↗</span></button>
         <div class="card-foot"><span>WASD / ARROWS</span><span>DRIVE & EXPLORE</span></div>
+      </section>
+      <section class="pause-overlay hidden" id="pause-overlay" aria-labelledby="pause-title" aria-hidden="true">
+        <div class="pause-card">
+          <p class="eyebrow">CITY SESSION</p>
+          <h2 id="pause-title">PAUSED</h2>
+          <p>Take a break. Your vehicle will stay where you left it.</p>
+          <div class="pause-controls"><span><b>WASD / ARROWS</b> Drive</span><span><b>SPACE</b> Brake</span><span><b>V</b> Switch vehicle</span><span><b>ESC</b> Resume / pause</span></div>
+          <button id="resume-button" type="button">RESUME DRIVE <span>↗</span></button>
+        </div>
       </section>
       <div class="hud-bottom">
         <div class="speed-card"><strong id="speed">000</strong><span>KM/H</span><small id="vehicle-name">SEDAN</small><small id="road-status">ROAD</small></div>
