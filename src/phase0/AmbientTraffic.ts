@@ -144,6 +144,15 @@ export function addAmbientTraffic(scene: THREE.Scene, count = 8) {
     scene.add(group);
   }
   return {
+    collides(position: THREE.Vector3, playerRadius = 1.55) {
+      const radiusByKind = [2.15, 1.55, 1.45, 3.8, 2.75];
+      return cars.some(car => {
+        const dx = car.group.position.x - position.x;
+        const dz = car.group.position.z - position.z;
+        const radius = playerRadius + radiusByKind[car.kind];
+        return dx * dx + dz * dz < radius * radius;
+      });
+    },
     update(dt: number) {
       for (const car of cars) {
         car.distance += car.speed * dt;
