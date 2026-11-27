@@ -59,7 +59,7 @@ for (let i = -100; i <= 100; i += 12) {
 }
 
 // Add a small Dhanmondi-inspired loop and lake as a second drivable district.
-addDhanmondiLoop(scene);
+const loopCurbBounds = addDhanmondiLoop(scene);
 
 // Low-poly Dhaka-inspired building blocks with colorful shop-level accents.
 const solidBuildings: THREE.Box3[] = [];
@@ -149,6 +149,15 @@ const lakeBounds = new THREE.Box2(
 function overlapsLake(position: THREE.Vector3) {
   return lakeBounds.containsPoint(new THREE.Vector2(position.x, position.z));
 }
+function getVehicleFootprint(position: THREE.Vector3) {
+  const halfWidth = 1.2;
+  const halfLength = vehicle.mode === 'SEDAN' ? 2.25 : 1.65;
+  const sin = Math.abs(Math.sin(car.rotation.y));
+  const cos = Math.abs(Math.cos(car.rotation.y));
+  const extentX = cos * halfWidth + sin * halfLength;
+  const extentZ = sin * halfWidth + cos * halfLength;
+  return new THREE.Box2(new THREE.Vector2(position.x - extentX, position.z - extentZ), new THREE.Vector2(position.x + extentX, position.z + extentZ));
+}
 function hitsBuilding(position: THREE.Vector3) {
   // Conservative rotated vehicle footprint, so turning cars don't clip corners.
   const halfWidth = 1.2;
@@ -164,6 +173,13 @@ function hitsBuilding(position: THREE.Vector3) {
   return solidBuildings.some(bounds =>
     carMaxX > bounds.min.x && carMinX < bounds.max.x &&
     carMaxZ > bounds.min.z && carMinZ < bounds.max.z
+  );
+}
+function hitsLoopCurb(position: THREE.Vector3) {
+  const footprint = getVehicleFootprint(position);
+  return loopCurbBounds.some(bounds =>
+    footprint.max.x > bounds.min.x && footprint.min.x < bounds.max.x &&
+    footprint.max.y > bounds.min.z && footprint.min.y < bounds.max.z
   );
 }
 const cameraRaycaster = new THREE.Raycaster();
@@ -197,7 +213,7 @@ function animate() {
     car.position.z += Math.cos(car.rotation.y) * velocity * dt;
     car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
     car.position.z = THREE.MathUtils.clamp(car.position.z, -105, 105);
-    if (overlapsLake(car.position) || hitsBuilding(car.position)) {
+    if (overlapsLake(car.position) || hitsBuilding(car.position) || hitsLoopCurb(car.position)) {
       car.position.copy(previousPosition);
       velocity *= -0.18;
     }
