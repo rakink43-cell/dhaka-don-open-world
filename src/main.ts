@@ -182,7 +182,6 @@ function animate() {
   if (started) {
     vehicle.update(keys);
     velocity = THREE.MathUtils.clamp(velocity, -7, vehicle.maxSpeed);
-    const previousPosition = car.position.clone();
     const forward = keys.has('KeyW') || keys.has('w') || keys.has('ArrowUp');
     const reverse = keys.has('KeyS') || keys.has('s') || keys.has('ArrowDown');
     const left = keys.has('KeyA') || keys.has('a') || keys.has('ArrowLeft');
@@ -199,13 +198,23 @@ function animate() {
     steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
     const speedFactor = THREE.MathUtils.clamp(Math.abs(velocity) / 8, 0, 1);
     car.rotation.y += steer * speedFactor * Math.sign(velocity || 1) * 1.35 * dt;
-    car.position.x += Math.sin(car.rotation.y) * velocity * dt;
-    car.position.z += Math.cos(car.rotation.y) * velocity * dt;
-    car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
-    car.position.z = THREE.MathUtils.clamp(car.position.z, -105, 105);
-    if (overlapsLake(car.position) || hitsBuilding(car.position) || hitsLoopCurb(car.position)) {
-      car.position.copy(previousPosition);
-      velocity *= -0.18;
+    const moveX = Math.sin(car.rotation.y) * velocity * dt;
+    const moveZ = Math.cos(car.rotation.y) * velocity * dt;
+    const blocked = () => overlapsLake(car.position) || hitsBuilding(car.position) || hitsLoopCurb(car.position);
+
+    // Resolve movement per axis: the car can slide along walls instead of
+    // snapping backward whenever one corner touches an obstacle.
+    car.position.x += moveX;
+    car.position.x = THREE.MathUtils.clamp(car.position.x, -120, 120);
+    if (blocked()) {
+      car.position.x -= moveX;
+      velocity *= 0.92;
+    }
+    car.position.z += moveZ;
+    car.position.z = THREE.MathUtils.clamp(car.position.z, -120, 120);
+    if (blocked()) {
+      car.position.z -= moveZ;
+      velocity *= 0.92;
     }
     speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
     const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');
