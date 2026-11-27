@@ -73,7 +73,10 @@ function cng(group: THREE.Group, wheelsOut: THREE.Mesh[]) {
   box(group, 1.05, 0.55, 0.08, mat('#b9d5d4', 0.28), 0, 1.2, -1.32);
   box(group, 0.12, 0.6, 1.38, black, -0.66, 1.16, -0.55);
   box(group, 0.12, 0.6, 1.38, black, 0.66, 1.16, -0.55);
-  box(group, 0.62, 0.24, 0.62, hood, 0, 0.83, 0.78);\n  box(group, 0.18, 0.16, 0.12, black, -0.72, 1.52, 0.12);\n  box(group, 0.18, 0.16, 0.12, black, 0.72, 1.52, 0.12);\n  box(group, 1.18, 0.08, 0.24, mat('#e9e2cf'), 0, 0.42, -1.38);
+  box(group, 0.62, 0.24, 0.62, hood, 0, 0.83, 0.78);
+  box(group, 0.18, 0.16, 0.12, black, -0.72, 1.52, 0.12);
+  box(group, 0.18, 0.16, 0.12, black, 0.72, 1.52, 0.12);
+  box(group, 1.18, 0.08, 0.24, mat('#e9e2cf'), 0, 0.42, -1.38);
   const geo = new THREE.CylinderGeometry(0.3, 0.3, 0.16, 12), rubber = mat('#202326', 1);
   const front = part(group, geo, rubber, 0, 0.3, 1.05); front.rotation.z = Math.PI / 2; wheelsOut.push(front);
   for (const x of [-0.68, 0.68]) { const w = part(group, geo, rubber, x, 0.3, -0.82); w.rotation.z = Math.PI / 2; wheelsOut.push(w); }
@@ -88,7 +91,9 @@ function rickshaw(group: THREE.Group, wheelsOut: THREE.Mesh[]) {
   const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.12, 12), rubber = mat('#202326', 1);
   const rear = part(group, wheelGeo, rubber, 0, 0.36, -0.94); rear.rotation.z = Math.PI / 2; wheelsOut.push(rear);
   for (const x of [-0.52, 0.52]) { const w = part(group, wheelGeo, rubber, x, 0.3, 0.68); w.rotation.z = Math.PI / 2; wheelsOut.push(w); }
-  box(group, 0.08, 0.48, 0.08, frame, 0, 0.88, 1.0);\n  box(group, 0.76, 0.34, 0.08, mat('#f0c85a'), 0, 1.18, -1.02);\n  box(group, 0.18, 0.16, 0.16, mat('#f6e7b4'), 0, 0.72, 1.0);
+  box(group, 0.08, 0.48, 0.08, frame, 0, 0.88, 1.0);
+  box(group, 0.76, 0.34, 0.08, mat('#f0c85a'), 0, 1.18, -1.02);
+  box(group, 0.18, 0.16, 0.16, mat('#f6e7b4'), 0, 0.72, 1.0);
 }
 function bus(group: THREE.Group, wheelsOut: THREE.Mesh[]) {
   const paint = mat('#e5d9c4', 0.68), green = mat('#16824a'), glass = mat('#2c4655', 0.25);
@@ -99,13 +104,20 @@ function bus(group: THREE.Group, wheelsOut: THREE.Mesh[]) {
     box(group, 0.08, 0.58, 0.9, glass, 1.2, 1.95, z);
   }
   box(group, 1.8, 0.62, 0.08, glass, 0, 2.0, 3.52);
-  box(group, 1.8, 0.52, 0.08, glass, 0, 1.9, -3.52);\n  box(group, 1.55, 0.34, 0.08, mat('#16824a'), 0, 2.75, 3.56);\n  const signFront = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.26), routeSign('DHAKA  •  LOCAL'));\n  signFront.position.set(0, 2.76, 3.61); group.add(signFront);\n  const signBack = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.26), routeSign('CITY BUS'));\n  signBack.position.set(0, 2.76, -3.61); signBack.rotation.y = Math.PI; group.add(signBack);
+  box(group, 1.8, 0.52, 0.08, glass, 0, 1.9, -3.52);
+  box(group, 1.55, 0.34, 0.08, mat('#16824a'), 0, 2.75, 3.56);
+  const signFront = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.26), routeSign('DHAKA  •  LOCAL'));
+  signFront.position.set(0, 2.76, 3.61); group.add(signFront);
+  const signBack = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.26), routeSign('CITY BUS'));
+  signBack.position.set(0, 2.76, -3.61); signBack.rotation.y = Math.PI; group.add(signBack);
   wheels(group, wheelsOut, 4.8, 2.35, 0.48);
 }
 function microbus(group: THREE.Group, wheelsOut: THREE.Mesh[]) {
   const paint = mat('#d5d6d0', 0.62), glass = mat('#2b4655', 0.25);
   box(group, 2.05, 1.65, 5.1, paint, 0, 1.25, 0);
-  box(group, 1.78, 0.75, 3.2, glass, 0, 1.85, -0.2);\n  for (const side of [-1, 1]) for (const z of [-1.65, -0.45, 0.75]) box(group, 0.08, 0.52, 0.82, glass, side * 1.04, 1.86, z);\n  box(group, 0.08, 1.05, 1.0, paint, 1.04, 1.28, 0.8);
+  box(group, 1.78, 0.75, 3.2, glass, 0, 1.85, -0.2);
+  for (const side of [-1, 1]) for (const z of [-1.65, -0.45, 0.75]) box(group, 0.08, 0.52, 0.82, glass, side * 1.04, 1.86, z);
+  box(group, 0.08, 1.05, 1.0, paint, 1.04, 1.28, 0.8);
   box(group, 1.88, 0.18, 0.16, mat('#e9e3d5'), 0, 0.85, 2.58);
   wheels(group, wheelsOut, 3.4, 2.05, 0.38);
 }
