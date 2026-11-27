@@ -159,20 +159,10 @@ function getVehicleFootprint(position: THREE.Vector3) {
   return new THREE.Box2(new THREE.Vector2(position.x - extentX, position.z - extentZ), new THREE.Vector2(position.x + extentX, position.z + extentZ));
 }
 function hitsBuilding(position: THREE.Vector3) {
-  // Conservative rotated vehicle footprint, so turning cars don't clip corners.
-  const halfWidth = 1.2;
-  const halfLength = vehicle.mode === 'SEDAN' ? 2.25 : 1.65;
-  const sin = Math.abs(Math.sin(car.rotation.y));
-  const cos = Math.abs(Math.cos(car.rotation.y));
-  const extentX = cos * halfWidth + sin * halfLength;
-  const extentZ = sin * halfWidth + cos * halfLength;
-  const carMinX = position.x - extentX;
-  const carMaxX = position.x + extentX;
-  const carMinZ = position.z - extentZ;
-  const carMaxZ = position.z + extentZ;
+  const footprint = getVehicleFootprint(position);
   return solidBuildings.some(bounds =>
-    carMaxX > bounds.min.x && carMinX < bounds.max.x &&
-    carMaxZ > bounds.min.z && carMinZ < bounds.max.z
+    footprint.max.x > bounds.min.x && footprint.min.x < bounds.max.x &&
+    footprint.max.y > bounds.min.z && footprint.min.y < bounds.max.z
   );
 }
 function hitsLoopCurb(position: THREE.Vector3) {
