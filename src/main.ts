@@ -9,6 +9,7 @@ const introCard = document.querySelector<HTMLElement>('#intro-card')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start-button')!;
 const pauseButton = document.querySelector<HTMLButtonElement>('#pause-button')!;
 const recoverButton = document.querySelector<HTMLButtonElement>('#recover-button')!;
+const touchResetButton = document.querySelector<HTMLButtonElement>('#touch-reset')!;
 const pauseOverlay = document.querySelector<HTMLElement>('#pause-overlay')!;
 const resumeButton = document.querySelector<HTMLButtonElement>('#resume-button')!;
 
@@ -149,8 +150,13 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => { keys.delete(e.code); keys.delete(e.key.toLowerCase()); });
 addEventListener('blur', () => keys.clear());
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) keys.clear();
+  if (document.hidden) {
+    keys.clear();
+    if (started) setPaused(true);
+  }
 });
+document.addEventListener('pointerup', () => keys.clear());
+document.addEventListener('pointercancel', () => keys.clear());
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
   const down = (e: Event) => { e.preventDefault(); keys.add(key); };
@@ -181,6 +187,7 @@ function resetCar() {
   roadStatus.classList.remove('off-road');
 }
 recoverButton.addEventListener('click', resetCar);
+touchResetButton.addEventListener('click', resetCar);
 startButton.addEventListener('click', () => { started = true; introCard.classList.add('hidden'); setPaused(false); });
 pauseButton.addEventListener('click', () => setPaused(!paused));
 resumeButton.addEventListener('click', () => setPaused(false));
