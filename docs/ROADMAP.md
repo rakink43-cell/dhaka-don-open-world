@@ -15,13 +15,14 @@
 - [x] Add responsive HUD and touch input
 - [x] Add Dhanmondi-inspired lake loop blockout
 - [x] Add CNG placeholder and vehicle switch (keyboard/mobile)
-- [ ] Verify build in GitHub Actions / local runtime
+- [x] Verify typecheck and build in GitHub Actions
+- [ ] Verify runtime in browser
 - [ ] Add Rapier after visual prototype validation
 
 ## Phase 1 — Playable blockout
 - [x] Basic building and lake collision blockout
-- [ ] Stable player/vehicle control
-- [ ] Camera smoothing and camera collision
+- [ ] Stable player/vehicle control (initial handling pass committed; browser tuning pending)
+- [x] Camera smoothing and building-obstruction raycast
 - [ ] Road boundaries and simple collision
 - [ ] One compact neighborhood blockout
 
