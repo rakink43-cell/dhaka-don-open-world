@@ -17,7 +17,7 @@ A free-first, browser-based 3D open-world game inspired by Dhaka, Bangladesh.
 - WASD / arrow keys: drive and steer
 - Space: brake
 - V: switch between sedan and CNG placeholder
-- Road HUD: shows whether the vehicle is on a mapped road; off-road driving has reduced acceleration and traction
+- Road HUD: shows whether the vehicle is on a mapped road; off-road driving has reduced acceleration and traction; road status uses vehicle-footprint coverage rather than only the vehicle center. Keyboard/touch inputs clear on window focus loss
 
 ## Local development
 ```bash
