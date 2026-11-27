@@ -8,6 +8,7 @@ const roadStatus = document.querySelector<HTMLElement>('#road-status')!;
 const introCard = document.querySelector<HTMLElement>('#intro-card')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start-button')!;
 const pauseButton = document.querySelector<HTMLButtonElement>('#pause-button')!;
+const recoverButton = document.querySelector<HTMLButtonElement>('#recover-button')!;
 const pauseOverlay = document.querySelector<HTMLElement>('#pause-overlay')!;
 const resumeButton = document.querySelector<HTMLButtonElement>('#resume-button')!;
 
@@ -135,6 +136,7 @@ let paused = false;
 let velocity = 0;
 let steer = 0;
 addEventListener('keydown', (e) => {
+  if (e.code === 'KeyR' && started && !paused) { resetCar(); return; }
   if (e.code === 'Escape') {
     e.preventDefault();
     if (started) setPaused(!paused);
@@ -168,6 +170,17 @@ function setPaused(next: boolean) {
   pauseButton.textContent = paused ? 'RESUME' : 'PAUSE';
   pauseButton.setAttribute('aria-label', paused ? 'Resume game' : 'Pause game');
 }
+function resetCar() {
+  car.position.set(0, 0.1, 5);
+  car.rotation.set(0, 0, 0);
+  velocity = 0;
+  steer = 0;
+  keys.clear();
+  speedLabel.textContent = '000';
+  roadStatus.textContent = 'ROAD';
+  roadStatus.classList.remove('off-road');
+}
+recoverButton.addEventListener('click', resetCar);
 startButton.addEventListener('click', () => { started = true; introCard.classList.add('hidden'); setPaused(false); });
 pauseButton.addEventListener('click', () => setPaused(!paused));
 resumeButton.addEventListener('click', () => setPaused(false));
