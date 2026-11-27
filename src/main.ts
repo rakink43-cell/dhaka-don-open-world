@@ -187,14 +187,55 @@ function roadCoverage(position: THREE.Vector3) {
   const width = footprint.max.x - footprint.min.x;
   const length = footprint.max.y - footprint.min.y;
   const footprintArea = Math.max(width * length, 0.001);
-  let coveredArea = 0;
+
+  // Sweep across the footprint and union the road intervals in each slice.
+  // This avoids counting overlapping road rectangles twice at junctions.
+  const xEdges = [footprint.min.x, footprint.max.x];
   for (const road of drivableRoads) {
-    const overlapX = Math.max(0, Math.min(footprint.max.x, road.maxX) - Math.max(footprint.min.x, road.minX));
-    const overlapZ = Math.max(0, Math.min(footprint.max.y, road.maxZ) - Math.max(footprint.min.y, road.minZ));
-    coveredArea += overlapX * overlapZ;
+    const left = Math.max(footprint.min.x, road.minX);
+    const right = Math.min(footprint.max.x, road.maxX);
+    if (right > left) xEdges.push(left, right);
   }
-  // Road rectangles meet at junctions, so cap the summed coverage.
-  return Math.min(coveredArea / footprintArea, 1);
+  xEdges.sort((a, b) => a - b);
+
+  let coveredArea = 0;
+  for (let i = 0; i < xEdges.length - 1; i++) {
+    const left = xEdges[i];
+    const right = xEdges[i + 1];
+    const sliceWidth = right - left;
+    if (sliceWidth <= 0.0001) continue;
+    const middleX = (left + right) * 0.5;
+    const intervals = drivableRoads
+      .filter(road => middleX >= road.minX && middleX <= road.maxX)
+      .map(road => ({
+        min: Math.max(footprint.min.y, road.minZ),
+        max: Math.min(footprint.max.y, road.maxZ)
+      }))
+      .filter(interval => interval.max > interval.min)
+      .sort((a, b) => a.min - b.min);
+
+    let coveredLength = 0;
+    let intervalStart = 0;
+    let intervalEnd = 0;
+    for (const interval of intervals) {
+      if (coveredLength === 0) {
+        intervalStart = interval.min;
+        intervalEnd = interval.max;
+        coveredLength = intervalEnd - intervalStart;
+      } else if (interval.min <= intervalEnd) {
+        const added = Math.max(0, interval.max - intervalEnd);
+        coveredLength += added;
+        intervalEnd = Math.max(intervalEnd, interval.max);
+      } else {
+        coveredArea += sliceWidth * coveredLength;
+        intervalStart = interval.min;
+        intervalEnd = interval.max;
+        coveredLength = intervalEnd - intervalStart;
+      }
+    }
+    if (coveredLength > 0) coveredArea += sliceWidth * coveredLength;
+  }
+  return THREE.MathUtils.clamp(coveredArea / footprintArea, 0, 1);
 }
 function isOnRoad(position: THREE.Vector3) {
   return roadCoverage(position) >= 0.62;
