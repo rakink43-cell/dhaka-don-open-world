@@ -4,6 +4,7 @@ import { addDhanmondiLoop, installCngSwitch } from './phase0/Phase0Extras';
 
 const mount = document.querySelector<HTMLDivElement>('#game-canvas-wrap')!;
 const speedLabel = document.querySelector<HTMLElement>('#speed')!;
+const roadStatus = document.querySelector<HTMLElement>('#road-status')!;
 const introCard = document.querySelector<HTMLElement>('#intro-card')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start-button')!;
 
@@ -167,6 +168,25 @@ function hitsBuilding(position: THREE.Vector3) {
     footprint.max.y > bounds.min.z && footprint.min.y < bounds.max.z
   );
 }
+const drivableRoads = [
+  { minX: -9, maxX: 9, minZ: -120, maxZ: 120 },
+  { minX: -120, maxX: 120, minZ: -9, maxZ: 9 },
+  { minX: 2, maxX: 114, minZ: -114, maxZ: -104 },
+  { minX: 2, maxX: 114, minZ: -12, maxZ: -2 },
+  { minX: 2, maxX: 12, minZ: -104, maxZ: -12 },
+  { minX: 104, maxX: 114, minZ: -104, maxZ: -12 },
+  { minX: 53, maxX: 63, minZ: -29, maxZ: 9 },
+  { minX: 29, maxX: 87, minZ: -63, maxZ: -53 }
+];
+function isOnRoad(position: THREE.Vector3) {
+  const footprint = getVehicleFootprint(position);
+  const centerX = (footprint.min.x + footprint.max.x) / 2;
+  const centerZ = (footprint.min.y + footprint.max.y) / 2;
+  return drivableRoads.some(road =>
+    centerX >= road.minX && centerX <= road.maxX &&
+    centerZ >= road.minZ && centerZ <= road.maxZ
+  );
+}
 function hitsLoopCurb(position: THREE.Vector3) {
   const footprint = getVehicleFootprint(position);
   return loopCurbBounds.some(bounds =>
@@ -189,9 +209,11 @@ function animate() {
     const left = keys.has('KeyA') || keys.has('a') || keys.has('ArrowLeft');
     const right = keys.has('KeyD') || keys.has('d') || keys.has('ArrowRight');
     const brake = keys.has('Space');
-    if (forward) velocity = Math.min(velocity + 15 * dt, vehicle.maxSpeed);
+    const onRoadBeforeMove = isOnRoad(car.position);
+    const offRoadFactor = onRoadBeforeMove ? 1 : 0.42;
+    if (forward) velocity = Math.min(velocity + 15 * offRoadFactor * dt, vehicle.maxSpeed * offRoadFactor);
     else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
-    else velocity *= Math.pow(0.982, dt * 60);
+    else velocity *= Math.pow(onRoadBeforeMove ? 0.982 : 0.90, dt * 60);
     // Braking is stronger and more predictable than rolling friction.
     if (brake) velocity *= Math.pow(0.72, dt * 60);
     // Keep reverse speed modest and prevent abrupt forward/reverse transitions.
@@ -199,7 +221,7 @@ function animate() {
     const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
     steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
     const speedFactor = THREE.MathUtils.clamp(Math.abs(velocity) / 8, 0, 1);
-    car.rotation.y += steer * speedFactor * Math.sign(velocity || 1) * 1.35 * dt;
+    car.rotation.y += steer * speedFactor * Math.sign(velocity || 1) * 1.35 * (onRoadBeforeMove ? 1 : 0.68) * dt;
     const moveX = Math.sin(car.rotation.y) * velocity * dt;
     const moveZ = Math.cos(car.rotation.y) * velocity * dt;
     const blocked = () => overlapsLake(car.position) || hitsBuilding(car.position) || hitsLoopCurb(car.position);
@@ -218,6 +240,9 @@ function animate() {
       car.position.z -= moveZ;
       velocity *= 0.92;
     }
+    const onRoadAfterMove = isOnRoad(car.position);
+    roadStatus.textContent = onRoadAfterMove ? 'ROAD' : 'OFF-ROAD';
+    roadStatus.classList.toggle('off-road', !onRoadAfterMove);
     speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
     const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');
     if (vehicleName) vehicleName.textContent = vehicle.label;
