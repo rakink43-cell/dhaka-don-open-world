@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import './style.css';
 import { addDhanmondiLoop, installCngSwitch } from './phase0/Phase0Extras';
+import { addPedestrians } from './phase0/Pedestrians';
 
 const mount = document.querySelector<HTMLDivElement>('#game-canvas-wrap')!;
 const speedLabel = document.querySelector<HTMLElement>('#speed')!;
@@ -130,6 +131,7 @@ for (const x of [-1.08, 1.08]) for (const z of [-1.35, 1.35]) {
 car.position.set(0, 0.1, 5);
 scene.add(car);
 const vehicle = installCngSwitch(car);
+const pedestrians = addPedestrians(scene, 26);
 
 const keys = new Set<string>();
 let started = false;
@@ -299,6 +301,7 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
   if (started && !paused) {
+    pedestrians.update(dt);
     vehicle.update(keys);
     velocity = THREE.MathUtils.clamp(velocity, -7, vehicle.maxSpeed);
     const forward = keys.has('KeyW') || keys.has('w') || keys.has('ArrowUp');
