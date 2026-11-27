@@ -227,7 +227,7 @@ function roadCoverage(position: THREE.Vector3) {
       } else {
         coveredArea += sliceWidth * coveredLength;
         intervalEnd = interval.max;
-        coveredLength = intervalEnd - intervalStart;
+        coveredLength = intervalEnd - interval.min;
       }
     }
     if (coveredLength > 0) coveredArea += sliceWidth * coveredLength;
