@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-type TrafficVehicle = { group: THREE.Group; route: number; distance: number; speed: number; wheelMeshes: THREE.Mesh[] };
+type TrafficVehicle = { group: THREE.Group; route: number; distance: number; speed: number; wheelMeshes: THREE.Mesh[]; kind: number };
 
 const routes = [
   [new THREE.Vector3(-105, 0, -5.5), new THREE.Vector3(105, 0, -5.5), new THREE.Vector3(105, 0, 5.5), new THREE.Vector3(-105, 0, 5.5)],
@@ -128,7 +128,7 @@ export function addAmbientTraffic(scene: THREE.Scene, count = 8) {
     buildVehicle(i, colors[i % colors.length], group, wheelMeshes);
     group.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
     const route = i % 2;
-    cars.push({ group, route, distance: lengths[route] * (i + 1) / (count + 1), speed: [6.3, 4.1, 2.5, 4.4, 5.5][i % 5], wheelMeshes });
+    cars.push({ group, route, distance: lengths[route] * (i + 1) / (count + 1), speed: [6.3, 4.1, 2.5, 4.4, 5.5][i % 5], wheelMeshes, kind: i % 5 });
     scene.add(group);
   }
   return {
