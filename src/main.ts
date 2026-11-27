@@ -181,6 +181,10 @@ function animate() {
     car.position.z += Math.cos(car.rotation.y) * velocity * dt;
     car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
     car.position.z = THREE.MathUtils.clamp(car.position.z, -105, 105);
+    if (overlapsLake(car.position) || hitsBuilding(car.position)) {
+      car.position.copy(previousPosition);
+      velocity *= -0.18;
+    }
     speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
     const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');
     if (vehicleName) vehicleName.textContent = vehicle.label;
