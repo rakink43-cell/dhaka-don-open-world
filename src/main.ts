@@ -327,7 +327,7 @@ function animate() {
     car.rotation.y += steer * speedFactor * Math.sign(velocity || 1) * 1.35 * (onRoadBeforeMove ? 1 : 0.68) * dt;
     const moveX = Math.sin(car.rotation.y) * velocity * dt;
     const moveZ = Math.cos(car.rotation.y) * velocity * dt;
-    const blocked = () => overlapsLake(car.position) || hitsBuilding(car.position) || hitsLoopCurb(car.position);
+    const blocked = () => overlapsLake(car.position) || hitsBuilding(car.position) || hitsLoopCurb(car.position) || ambientTraffic.collides(car.position);
 
     // Resolve movement per axis: the car can slide along walls instead of
     // snapping backward whenever one corner touches an obstacle.
