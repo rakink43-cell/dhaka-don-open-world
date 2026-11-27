@@ -143,6 +143,7 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
   if (started) {
+    vehicle.update(keys);
     const forward = keys.has('KeyW') || keys.has('w') || keys.has('ArrowUp');
     const reverse = keys.has('KeyS') || keys.has('s') || keys.has('ArrowDown');
     const left = keys.has('KeyA') || keys.has('a') || keys.has('ArrowLeft');
@@ -159,7 +160,8 @@ function animate() {
     car.position.z += Math.cos(car.rotation.y) * velocity * dt;
     car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
     car.position.z = THREE.MathUtils.clamp(car.position.z, -105, 105);
-    speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');\n    const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');\n    if (vehicleName) vehicleName.textContent = vehicle.label;
+    speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
+    const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');\n    if (vehicleName) vehicleName.textContent = vehicle.label;
   }
   desiredCamera.set(car.position.x - Math.sin(car.rotation.y) * 10, car.position.y + 5.2, car.position.z - Math.cos(car.rotation.y) * 10);
   camera.position.lerp(desiredCamera, 1 - Math.exp(-4 * dt));
