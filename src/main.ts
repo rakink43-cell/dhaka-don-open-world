@@ -63,6 +63,7 @@ addDhanmondiLoop(scene);
 
 // Low-poly Dhaka-inspired building blocks with colorful shop-level accents.
 const solidBuildings: THREE.Box3[] = [];
+const buildingMeshes: THREE.Mesh[] = [];
 const palette = ['#c8b49b', '#d8c9ad', '#b7c1b8', '#d0b6a5', '#9faeb2', '#d8d1bf'];
 let seed = 17;
 const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
@@ -74,6 +75,7 @@ for (let x = -78; x <= 78; x += 26) {
     const h = 8 + random() * 28;
     const building = box(w, h, d, palette[Math.floor(random() * palette.length)], x, 0.14, z);
     solidBuildings.push(new THREE.Box3().setFromObject(building));
+    buildingMeshes.push(building);
     // Roof tank / rooftop room.
     if (random() > 0.45) box(w * 0.35, 2.1, d * 0.3, '#8c9695', x - 1, h + 0.14, z);
     // Storefront color strip facing nearby road.
@@ -148,15 +150,25 @@ function overlapsLake(position: THREE.Vector3) {
   return lakeBounds.containsPoint(new THREE.Vector2(position.x, position.z));
 }
 function hitsBuilding(position: THREE.Vector3) {
-  const carMinX = position.x - 1.2;
-  const carMaxX = position.x + 1.2;
-  const carMinZ = position.z - 2.25;
-  const carMaxZ = position.z + 2.25;
+  // Conservative rotated vehicle footprint, so turning cars don't clip corners.
+  const halfWidth = 1.2;
+  const halfLength = vehicle.mode === 'SEDAN' ? 2.25 : 1.65;
+  const sin = Math.abs(Math.sin(car.rotation.y));
+  const cos = Math.abs(Math.cos(car.rotation.y));
+  const extentX = cos * halfWidth + sin * halfLength;
+  const extentZ = sin * halfWidth + cos * halfLength;
+  const carMinX = position.x - extentX;
+  const carMaxX = position.x + extentX;
+  const carMinZ = position.z - extentZ;
+  const carMaxZ = position.z + extentZ;
   return solidBuildings.some(bounds =>
     carMaxX > bounds.min.x && carMinX < bounds.max.x &&
     carMaxZ > bounds.min.z && carMinZ < bounds.max.z
   );
 }
+const cameraRaycaster = new THREE.Raycaster();
+const cameraFocus = new THREE.Vector3();
+const cameraDirection = new THREE.Vector3();
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
@@ -172,11 +184,15 @@ function animate() {
     const brake = keys.has('Space');
     if (forward) velocity = Math.min(velocity + 15 * dt, vehicle.maxSpeed);
     else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
-    else velocity *= Math.pow(0.965, dt * 60);
-    if (brake) velocity *= Math.pow(0.82, dt * 60);
+    else velocity *= Math.pow(0.982, dt * 60);
+    // Braking is stronger and more predictable than rolling friction.
+    if (brake) velocity *= Math.pow(0.72, dt * 60);
+    // Keep reverse speed modest and prevent abrupt forward/reverse transitions.
+    velocity = THREE.MathUtils.clamp(velocity, -7, vehicle.maxSpeed);
     const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
     steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
-    car.rotation.y += steer * (velocity / 24) * 1.65 * dt;
+    const speedFactor = THREE.MathUtils.clamp(Math.abs(velocity) / 8, 0, 1);
+    car.rotation.y += steer * speedFactor * Math.sign(velocity || 1) * 1.35 * dt;
     car.position.x += Math.sin(car.rotation.y) * velocity * dt;
     car.position.z += Math.cos(car.rotation.y) * velocity * dt;
     car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
@@ -189,9 +205,21 @@ function animate() {
     const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');
     if (vehicleName) vehicleName.textContent = vehicle.label;
   }
+  cameraFocus.set(car.position.x, car.position.y + 1.15, car.position.z);
   desiredCamera.set(car.position.x - Math.sin(car.rotation.y) * 10, car.position.y + 5.2, car.position.z - Math.cos(car.rotation.y) * 10);
-  camera.position.lerp(desiredCamera, 1 - Math.exp(-4 * dt));
-  camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
+  // Pull the follow camera forward when a building is between the car and camera.
+  cameraDirection.copy(desiredCamera).sub(cameraFocus);
+  const cameraDistance = cameraDirection.length();
+  cameraDirection.normalize();
+  cameraRaycaster.set(cameraFocus, cameraDirection);
+  cameraRaycaster.far = cameraDistance;
+  const cameraHits = cameraRaycaster.intersectObjects(buildingMeshes, false);
+  const cameraTarget = desiredCamera.clone();
+  if (cameraHits.length > 0) {
+    cameraTarget.copy(cameraFocus).addScaledVector(cameraDirection, Math.max(2.8, cameraHits[0].distance - 0.65));
+  }
+  camera.position.lerp(cameraTarget, 1 - Math.exp(-6 * dt));
+  camera.lookAt(cameraFocus);
   renderer.render(scene, camera);
 }
 animate();
