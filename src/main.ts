@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import './style.css';
+import { addDhanmondiLoop, installCngSwitch } from './phase0/Phase0Extras';
 
 const mount = document.querySelector<HTMLDivElement>('#game-canvas-wrap')!;
 const speedLabel = document.querySelector<HTMLElement>('#speed')!;
@@ -57,6 +58,9 @@ for (let i = -100; i <= 100; i += 12) {
   box(5, 0.025, 0.22, '#e8e4d7', i, 0.15, 0);
 }
 
+// Add a small Dhanmondi-inspired loop and lake as a second drivable district.
+addDhanmondiLoop(scene);
+
 // Low-poly Dhaka-inspired building blocks with colorful shop-level accents.
 const palette = ['#c8b49b', '#d8c9ad', '#b7c1b8', '#d0b6a5', '#9faeb2', '#d8d1bf'];
 let seed = 17;
@@ -113,6 +117,7 @@ for (const x of [-1.08, 1.08]) for (const z of [-1.35, 1.35]) {
 }
 car.position.set(0, 0.1, 5);
 scene.add(car);
+const vehicle = installCngSwitch(car);
 
 const keys = new Set<string>();
 let started = false;
@@ -143,7 +148,7 @@ function animate() {
     const left = keys.has('KeyA') || keys.has('a') || keys.has('ArrowLeft');
     const right = keys.has('KeyD') || keys.has('d') || keys.has('ArrowRight');
     const brake = keys.has('Space');
-    if (forward) velocity = Math.min(velocity + 15 * dt, 24);
+    if (forward) velocity = Math.min(velocity + 15 * dt, vehicle.maxSpeed);
     else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
     else velocity *= Math.pow(0.965, dt * 60);
     if (brake) velocity *= Math.pow(0.82, dt * 60);
@@ -154,7 +159,7 @@ function animate() {
     car.position.z += Math.cos(car.rotation.y) * velocity * dt;
     car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
     car.position.z = THREE.MathUtils.clamp(car.position.z, -105, 105);
-    speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
+    speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');\n    const vehicleName = document.querySelector<HTMLElement>('#vehicle-name');\n    if (vehicleName) vehicleName.textContent = vehicle.label;
   }
   desiredCamera.set(car.position.x - Math.sin(car.rotation.y) * 10, car.position.y + 5.2, car.position.z - Math.cos(car.rotation.y) * 10);
   camera.position.lerp(desiredCamera, 1 - Math.exp(-4 * dt));
