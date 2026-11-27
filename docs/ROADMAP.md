@@ -13,7 +13,9 @@
 - [x] Add Vite + TypeScript
 - [x] Add initial Three.js scene
 - [x] Add responsive HUD and touch input
-- [ ] Verify build in Arena or local runtime
+- [x] Add Dhanmondi-inspired lake loop blockout
+- [x] Add CNG placeholder and vehicle switch (keyboard/mobile)
+- [ ] Verify build in GitHub Actions / local runtime
 - [ ] Add Rapier after visual prototype validation
 
 ## Phase 1 — Playable blockout
