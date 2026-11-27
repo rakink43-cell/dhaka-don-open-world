@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#101820" />
+    <meta name="description" content="DHAKA-DON OPEN WORLD — a Dhaka-inspired browser game prototype." />
+    <title>DHAKA-DON OPEN WORLD</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="game-canvas-wrap"></div>
+      <header class="hud-top">
+        <div class="brand"><span class="brand-mark">DD</span><div><strong>DHAKA-DON</strong><small>OPEN WORLD · PROTOTYPE</small></div></div>
+        <div class="location-pill"><span class="live-dot"></span><span id="location-label">DHANMONDI BLOCKOUT</span></div>
+      </header>
+      <section class="intro-card" id="intro-card">
+        <p class="eyebrow">PROJECT BUILD 0.1</p>
+        <h1>Welcome to<br /><span>Dhaka.</span></h1>
+        <p>A first playable city block. The roads, skyline and vehicle scale are placeholders while the world is being built.</p>
+        <button id="start-button">ENTER CITY <span>↗</span></button>
+        <div class="card-foot"><span>WASD / ARROWS</span><span>DRIVE & EXPLORE</span></div>
+      </section>
+      <div class="hud-bottom">
+        <div class="speed-card"><strong id="speed">000</strong><span>KM/H</span></div>
+        <div class="controls-hint"><span>W</span><span>A</span><span>S</span><span>D</span><small>MOVE</small></div>
+      </div>
+      <div class="mobile-controls" aria-label="Touch controls">
+        <div class="dpad"><button data-key="ArrowUp" aria-label="Forward">▲</button><div><button data-key="ArrowLeft" aria-label="Left">◀</button><button data-key="ArrowDown" aria-label="Back">▼</button><button data-key="ArrowRight" aria-label="Right">▶</button></div></div>
+        <button class="action-button" data-key="Space" aria-label="Brake">BRAKE</button>
+      </div>
+      <div class="build-tag">ALPHA · CITY BLOCKOUT</div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
