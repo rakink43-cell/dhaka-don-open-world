@@ -16,6 +16,8 @@ GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 - Dhanmondi-inspired lake loop with road markings and low-poly lamps
 - Green CNG auto-rickshaw placeholder; switch with V / mobile vehicle button
 - Vehicle-specific speed cap and mode HUD
+- Basic building and lake collision checks
+- CI build and TypeScript typecheck passing
 - Responsive HUD and project documentation
 
 ## Not yet implemented
@@ -30,4 +32,4 @@ GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 - Cloudflare Pages deployment
 
 ## Validation
-Build and typecheck are pending automated GitHub Actions validation. This implementation batch is on PR #1 for review. The local execution environment could not resolve github.com for a clone/build; CI status is not yet available. No Cloudflare deployment has been performed.
+Build and typecheck are pending automated GitHub Actions validation. Implementation is on PR #1 for review. GitHub Actions build and typecheck passed on 2026-11-27. Browser playtesting has not yet been performed. No Cloudflare deployment has been performed.
