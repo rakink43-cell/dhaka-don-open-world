@@ -19,6 +19,7 @@
 - [ ] Add Rapier after visual prototype validation
 
 ## Phase 1 — Playable blockout
+- [x] Basic building and lake collision blockout
 - [ ] Stable player/vehicle control
 - [ ] Camera smoothing and camera collision
 - [ ] Road boundaries and simple collision
