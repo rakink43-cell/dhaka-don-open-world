@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{font-family:Inter,system-ui,sans-serif;color:#f7f8f6;background:#101820;font-synthesis:none;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+html,body,#app{margin:0;width:100%;height:100%;overflow:hidden}
+body{touch-action:none}
+#game-canvas-wrap{position:absolute;inset:0}
+#game-canvas-wrap canvas{display:block;width:100%;height:100%}
+.hud-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:26px 32px;background:linear-gradient(180deg,rgba(9,18,23,.65),transparent)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{display:grid;place-items:center;width:42px;height:42px;background:#e6b34b;color:#15212a;font:800 16px 'Barlow Condensed',sans-serif;transform:skew(-7deg)}
+.brand strong{display:block;font:800 21px 'Barlow Condensed',sans-serif;letter-spacing:1.3px}
+.brand small{display:block;font-size:9px;letter-spacing:2px;color:#c3d0d3;margin-top:2px}
+.location-pill{display:flex;align-items:center;gap:9px;border:1px solid #ffffff35;border-radius:99px;padding:10px 15px;background:#111c25a8;font-size:10px;font-weight:700;letter-spacing:1px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#d7ad51;box-shadow:0 0 12px #d7ad51}
+.intro-card{position:absolute;left:clamp(20px,7vw,100px);top:50%;transform:translateY(-45%);width:min(390px,calc(100% - 40px));padding:30px;background:linear-gradient(135deg,#101b24ed,#16242bdc);border:1px solid #ffffff25;box-shadow:0 24px 80px #0a101766;backdrop-filter:blur(18px);transition:opacity .25s,transform .25s}
+.intro-card.hidden{opacity:0;pointer-events:none;transform:translateY(-40%)}
+.eyebrow{font-size:10px;letter-spacing:2.5px;color:#e6b34b;font-weight:800}
+.intro-card h1{font:800 clamp(42px,6vw,68px)/.88 'Barlow Condensed',sans-serif;letter-spacing:-1px;margin:16px 0 18px}
+.intro-card h1 span{color:#e6b34b}
+.intro-card>p:not(.eyebrow){font-size:13px;line-height:1.7;color:#c5d0d4;max-width:300px}
+#start-button{margin-top:18px;border:0;background:#e6b34b;color:#16212a;font-weight:800;letter-spacing:1px;padding:15px 18px;width:100%;display:flex;justify-content:space-between;cursor:pointer}
+#start-button span{font-size:18px}
+.card-foot{display:flex;justify-content:space-between;margin-top:22px;font-size:8px;letter-spacing:1.4px;color:#84969c}
+.hud-bottom{position:absolute;left:32px;bottom:28px;display:flex;align-items:flex-end;gap:22px}
+.speed-card{display:flex;align-items:baseline;gap:7px;padding:13px 17px;background:#101b24d9;border:1px solid #ffffff24}
+.speed-card strong{font:800 34px 'Barlow Condensed',sans-serif}
+.speed-card span{font-size:9px;color:#d6b15d;font-weight:800}
+.controls-hint{display:flex;gap:5px;align-items:center}
+.controls-hint span{display:grid;place-items:center;width:25px;height:25px;background:#101b24c9;border:1px solid #ffffff30;font-size:10px;font-weight:700}
+.controls-hint small{margin-left:6px;font-size:9px;letter-spacing:1px;color:#e1e7e8}
+.build-tag{position:absolute;right:32px;bottom:34px;font-size:9px;letter-spacing:1.5px;color:#e5e9e8;text-shadow:0 1px 5px #000}
+.mobile-controls{display:none}
+@media(max-width:700px){.hud-top{padding:17px}.brand-mark{width:34px;height:34px;font-size:13px}.brand strong{font-size:17px}.brand small{font-size:7px}.location-pill{font-size:8px;padding:8px 10px}.intro-card{left:20px;top:46%;padding:24px}.intro-card h1{font-size:54px}.hud-bottom{left:17px;bottom:18px}.controls-hint{display:none}.speed-card{padding:10px 13px}.speed-card strong{font-size:29px}.build-tag{right:17px;bottom:25px;font-size:7px}.mobile-controls{display:flex;position:absolute;bottom:22px;right:18px;align-items:flex-end;gap:18px}.dpad>button,.dpad div button,.action-button{border:1px solid #ffffff55;background:#14212dbb;color:#fff;backdrop-filter:blur(6px);width:43px;height:43px;border-radius:8px;font-weight:800;touch-action:none}.dpad>button{display:block;margin:0 auto 5px}.dpad div{display:flex;gap:5px}.action-button{width:60px;height:60px;border-radius:50%;font-size:9px;color:#e6b34b}.mobile-controls button:active{background:#e6b34b;color:#14212d}}
