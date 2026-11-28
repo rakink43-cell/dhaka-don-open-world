@@ -343,6 +343,9 @@ function animate() {
           const px = walker.mesh.position.x, pz = walker.mesh.position.z;
           if (Math.hypot(nx - px, nz - pz) < 0.9) { personBlocked = true; break; }
         }
+        // The player cannot walk through the vehicle they left, but can
+        // approach close enough to use the enter action.
+        if (Math.hypot(nx - car.position.x, nz - car.position.z) < 1.85) personBlocked = true;
         for (const actor of traffic) {
           if (Math.hypot(nx - actor.x, nz - actor.z) < actor.radius + 0.65) { personBlocked = true; break; }
         }
@@ -357,7 +360,11 @@ function animate() {
       velocity = 0;
       speedLabel.textContent = 'WALK';
       const actionButton = document.querySelector<HTMLButtonElement>('[data-action="toggle"]');
-      if (actionButton) actionButton.textContent = Math.hypot(player.position.x - car.position.x, player.position.z - car.position.z) < 4.2 ? 'ENTER' : 'WALK';
+      if (actionButton) {
+        const nearCar = Math.hypot(player.position.x - car.position.x, player.position.z - car.position.z) < 4.2;
+        actionButton.textContent = nearCar ? 'ENTER' : 'CAR';
+        actionButton.disabled = !nearCar;
+      }
     } else {
       if (forward) velocity = Math.min(velocity + 15 * dt, 24);
       else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
@@ -377,7 +384,7 @@ function animate() {
       else velocity *= -0.12;
       speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
       const actionButton = document.querySelector<HTMLButtonElement>('[data-action="toggle"]');
-      if (actionButton) actionButton.textContent = 'EXIT';
+      if (actionButton) { actionButton.textContent = 'EXIT'; actionButton.disabled = false; }
     }
     // Ambient traffic creeps along the local roads, then loops within the compact map.
     for (const actor of traffic) {
