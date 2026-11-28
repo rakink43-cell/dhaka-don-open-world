@@ -278,12 +278,20 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) relea
 document.querySelector<HTMLButtonElement>('[data-action="toggle"]')?.addEventListener('click', (e) => { e.preventDefault(); toggleQueued = true; });
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
-  const down = (e: Event) => { e.preventDefault(); keys.add(key); };
+  const down = (e: Event) => {
+    e.preventDefault();
+    keys.add(key);
+    const pointer = e as PointerEvent;
+    if (pointer.pointerId !== undefined && button.setPointerCapture) {
+      try { button.setPointerCapture(pointer.pointerId); } catch { /* pointer may already be released */ }
+    }
+  };
   const up = (e: Event) => { e.preventDefault(); keys.delete(key); };
   button.addEventListener('pointerdown', down);
   button.addEventListener('pointerup', up);
   button.addEventListener('pointerleave', up);
   button.addEventListener('pointercancel', up);
+  button.addEventListener('lostpointercapture', up);
 });
 
 startButton.addEventListener('click', () => { started = true; introCard.classList.add('hidden'); });
