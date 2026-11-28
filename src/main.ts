@@ -58,6 +58,7 @@ for (let i = -100; i <= 100; i += 12) {
 }
 
 // Low-poly Dhaka-inspired building blocks with colorful shop-level accents.
+const buildingColliders: { x: number; z: number; halfW: number; halfD: number }[] = [];
 const palette = ['#c8b49b', '#d8c9ad', '#b7c1b8', '#d0b6a5', '#9faeb2', '#d8d1bf'];
 let seed = 17;
 const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
@@ -67,6 +68,7 @@ for (let x = -78; x <= 78; x += 26) {
     const w = 13 + random() * 7;
     const d = 13 + random() * 7;
     const h = 8 + random() * 28;
+    buildingColliders.push({ x, z, halfW: w / 2 + 1.2, halfD: d / 2 + 1.2 });
     box(w, h, d, palette[Math.floor(random() * palette.length)], x, 0.14, z);
     if (random() > 0.45) box(w * 0.35, 2.1, d * 0.3, '#8c9695', x - 1, h + 0.14, z);
     if (Math.abs(z) < 44) box(w * 0.72, 1.2, 0.35, '#2d6b70', x, 1.2, z + Math.sign(z) * d * 0.52);
@@ -265,6 +267,7 @@ let velocity = 0;
 let steer = 0;
 addEventListener('keydown', (e) => { keys.add(e.code); keys.add(e.key.toLowerCase()); if (e.code === 'KeyE' && !e.repeat) toggleQueued = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); keys.delete(e.key.toLowerCase()); });
+document.querySelector<HTMLButtonElement>('[data-action="toggle"]')?.addEventListener('click', (e) => { e.preventDefault(); toggleQueued = true; });
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
   const down = (e: Event) => { e.preventDefault(); keys.add(key); };
@@ -307,6 +310,13 @@ function animate() {
         const nx = player.position.x + (moveX / length) * 5.2 * dt;
         const nz = player.position.z + (moveZ / length) * 5.2 * dt;
         let personBlocked = Math.abs(nx) > 103 || Math.abs(nz) > 103;
+        for (const obstacle of buildingColliders) {
+          if (Math.abs(nx - obstacle.x) < obstacle.halfW + 0.35 && Math.abs(nz - obstacle.z) < obstacle.halfD + 0.35) { personBlocked = true; break; }
+        }
+        if (!personBlocked) for (const walker of pedestrians) {
+          const px = walker.mesh.position.x, pz = walker.mesh.position.z;
+          if (Math.hypot(nx - px, nz - pz) < 0.9) { personBlocked = true; break; }
+        }
         for (const actor of traffic) {
           if (Math.hypot(nx - actor.x, nz - actor.z) < actor.radius + 0.65) { personBlocked = true; break; }
         }
@@ -320,6 +330,8 @@ function animate() {
       playerLimbs[2].rotation.x = -gait; playerLimbs[3].rotation.x = gait;
       velocity = 0;
       speedLabel.textContent = 'WALK';
+      const actionButton = document.querySelector<HTMLButtonElement>('[data-action="toggle"]');
+      if (actionButton) actionButton.textContent = Math.hypot(player.position.x - car.position.x, player.position.z - car.position.z) < 4.2 ? 'ENTER' : 'WALK';
     } else {
       if (forward) velocity = Math.min(velocity + 15 * dt, 24);
       else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
@@ -338,6 +350,8 @@ function animate() {
       if (!blocked) { car.position.x = nextX; car.position.z = nextZ; }
       else velocity *= -0.12;
       speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
+      const actionButton = document.querySelector<HTMLButtonElement>('[data-action="toggle"]');
+      if (actionButton) actionButton.textContent = 'EXIT';
     }
     // Ambient traffic creeps along the local roads, then loops within the compact map.
     for (const actor of traffic) {
