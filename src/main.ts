@@ -59,6 +59,9 @@ for (let i = -100; i <= 100; i += 12) {
 
 // Low-poly Dhaka-inspired building blocks with colorful shop-level accents.
 const buildingColliders: { x: number; z: number; halfW: number; halfD: number }[] = [];
+function hitsBuilding(x: number, z: number, padding = 0) {
+  return buildingColliders.some(o => Math.abs(x - o.x) < o.halfW + padding && Math.abs(z - o.z) < o.halfD + padding);
+}
 const palette = ['#c8b49b', '#d8c9ad', '#b7c1b8', '#d0b6a5', '#9faeb2', '#d8d1bf'];
 let seed = 17;
 const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
@@ -226,7 +229,7 @@ function makePedestrian(axis: 'z' | 'x', fixed: number, progress: number, index:
     shoe.position.set(0, -0.62, 0.04); leg.add(shoe); person.add(leg); limbs.push(leg);
   }
   person.position.set(axis === 'z' ? fixed : progress, 0.12, axis === 'z' ? progress : fixed);
-  person.rotation.y = axis === 'z' ? (fixed < 0 ? Math.PI : 0) : (fixed < 0 ? -Math.PI / 2 : Math.PI / 2);
+  person.rotation.y = axis === 'z' ? 0 : Math.PI / 2;
   scene.add(person);
   pedestrians.push({ mesh: person, limbs, axis, fixed, progress, speed: 0.65 + (index % 4) * 0.13, phase: index * 0.8 });
 }
@@ -342,7 +345,7 @@ function animate() {
       car.rotation.y += steer * (velocity / 24) * 1.65 * dt;
       const nextX = car.position.x + Math.sin(car.rotation.y) * velocity * dt;
       const nextZ = car.position.z + Math.cos(car.rotation.y) * velocity * dt;
-      let blocked = Math.abs(nextX) > 105 || Math.abs(nextZ) > 105;
+      let blocked = Math.abs(nextX) > 105 || Math.abs(nextZ) > 105 || hitsBuilding(nextX, nextZ, 1.35);
       for (const actor of traffic) {
         const dx = nextX - actor.x, dz = nextZ - actor.z;
         if (dx * dx + dz * dz < (actor.radius + 1.25) ** 2) { blocked = true; break; }
@@ -355,15 +358,23 @@ function animate() {
     }
     // Ambient traffic creeps along the local roads, then loops within the compact map.
     for (const actor of traffic) {
-      if (Math.abs(actor.yaw) < 0.01 || Math.abs(Math.abs(actor.yaw) - Math.PI) < 0.01) {
-        actor.z += Math.cos(actor.yaw) * actor.speed * dt;
-        if (actor.z > 108) actor.z = -108;
-        if (actor.z < -108) actor.z = 108;
-      } else {
-        actor.x += Math.sin(actor.yaw) * actor.speed * dt;
-        if (actor.x > 108) actor.x = -108;
-        if (actor.x < -108) actor.x = 108;
+      const verticalRoad = Math.abs(actor.yaw) < 0.01 || Math.abs(Math.abs(actor.yaw) - Math.PI) < 0.01;
+      let nx = actor.x + (verticalRoad ? 0 : Math.sin(actor.yaw) * actor.speed * dt);
+      let nz = actor.z + (verticalRoad ? Math.cos(actor.yaw) * actor.speed * dt : 0);
+      if (nx > 108) nx = -108; if (nx < -108) nx = 108;
+      if (nz > 108) nz = -108; if (nz < -108) nz = 108;
+      let trafficBlocked = false;
+      for (const other of traffic) {
+        if (other === actor) continue;
+        const otherVertical = Math.abs(other.yaw) < 0.01 || Math.abs(Math.abs(other.yaw) - Math.PI) < 0.01;
+        if (verticalRoad === otherVertical && Math.hypot(nx - other.x, nz - other.z) < actor.radius + other.radius + 1.1) {
+          trafficBlocked = true; break;
+        }
       }
+      const activeX = onFoot ? player.position.x : car.position.x;
+      const activeZ = onFoot ? player.position.z : car.position.z;
+      if (Math.hypot(nx - activeX, nz - activeZ) < actor.radius + (onFoot ? 1.1 : 2.4)) trafficBlocked = true;
+      if (!trafficBlocked) { actor.x = nx; actor.z = nz; }
       actor.mesh.position.set(actor.x, 0.1, actor.z);
     }
     // Walk pedestrians along sidewalk loops; swing arms and legs for a visible gait.
