@@ -201,6 +201,30 @@ makeTraffic('microbus', -5.2, 72, Math.PI, 5.2);
 makeTraffic('cng', 34, 5.2, -Math.PI / 2, 3.8);
 makeTraffic('rickshaw', -36, -5.2, Math.PI / 2, 1.8);
 
+// Four compact signal posts at the central junction.
+type SignalBulbs = { vertical: THREE.Mesh[]; horizontal: THREE.Mesh[] };
+const signalHeads: SignalBulbs[] = [];
+const signalBulbGeo = new THREE.SphereGeometry(0.18, 8, 6);
+const signalColors = ['#ed493e', '#f0c34e', '#49c878'];
+function makeSignalBulbs(x: number, z: number) {
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 4.2, 6), mat('#30383a'));
+  pole.position.set(x, 2.1, z); pole.castShadow = true; scene.add(pole);
+  const createSet = (offsetX: number, offsetZ: number) => signalColors.map((color, index) => {
+    const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.08, roughness: 0.35 });
+    const bulb = new THREE.Mesh(signalBulbGeo, material);
+    bulb.position.set(x + offsetX, 3.75 - index * 0.42, z + offsetZ);
+    scene.add(bulb); return bulb;
+  });
+  signalHeads.push({ vertical: createSet(0.2, 0), horizontal: createSet(0, 0.2) });
+}
+for (const sx of [-1, 1]) for (const sz of [-1, 1]) makeSignalBulbs(sx * 10.2, sz * 10.2);
+function setSignal(bulbs: THREE.Mesh[], active: number) {
+  bulbs.forEach((bulb, index) => {
+    const material = bulb.material as THREE.MeshStandardMaterial;
+    material.emissiveIntensity = index === active ? 1.8 : 0.04;
+  });
+}
+
 // Low-poly Dhaka pedestrians on the footpaths (kept outside the vehicle lanes).
 type Pedestrian = { mesh: THREE.Group; limbs: THREE.Group[]; axis: 'z' | 'x'; fixed: number; progress: number; speed: number; phase: number };
 const pedestrians: Pedestrian[] = [];
@@ -390,6 +414,14 @@ function animate() {
       const actionButton = document.querySelector<HTMLButtonElement>('[data-action="toggle"]');
       if (actionButton) { actionButton.textContent = 'EXIT'; actionButton.disabled = false; }
     }
+    // Alternating signal cycle: north/south green, amber, east/west green, amber.
+    const signalPhase = clock.elapsedTime % 24;
+    const verticalState = signalPhase < 10 ? 2 : signalPhase < 12 ? 1 : 0;
+    const horizontalState = signalPhase < 12 ? 0 : signalPhase < 22 ? 2 : 1;
+    for (const head of signalHeads) {
+      setSignal(head.vertical, verticalState);
+      setSignal(head.horizontal, horizontalState);
+    }
     // Ambient traffic creeps along the local roads, then loops within the compact map.
     for (const actor of traffic) {
       const verticalRoad = Math.abs(actor.yaw) < 0.01 || Math.abs(Math.abs(actor.yaw) - Math.PI) < 0.01;
@@ -398,6 +430,21 @@ function animate() {
       if (nx > 108) nx = -108; if (nx < -108) nx = 108;
       if (nz > 108) nz = -108; if (nz < -108) nz = 108;
       let trafficBlocked = false;
+      const movingVertical = verticalRoad;
+      const direction = movingVertical ? Math.sign(Math.cos(actor.yaw)) : Math.sign(Math.sin(actor.yaw));
+      const isRed = movingVertical ? verticalState === 0 : horizontalState === 0;
+      const isAmber = movingVertical ? verticalState === 1 : horizontalState === 1;
+      // Stop near the junction line on red; amber traffic approaches more slowly.
+      if (isRed) {
+        const distanceToLine = movingVertical
+          ? direction > 0 ? -12 - actor.z : actor.z - 12
+          : direction > 0 ? -12 - actor.x : actor.x - 12;
+        if (distanceToLine >= -0.2 && distanceToLine < 3.0) trafficBlocked = true;
+      }
+      if (isAmber && Math.abs(actor.x) < 16 && Math.abs(actor.z) < 16) {
+        nx = actor.x + (movingVertical ? 0 : Math.sin(actor.yaw) * actor.speed * 0.45 * dt);
+        nz = actor.z + (movingVertical ? Math.cos(actor.yaw) * actor.speed * 0.45 * dt : 0);
+      }
       for (const other of traffic) {
         if (other === actor) continue;
         const otherVertical = Math.abs(other.yaw) < 0.01 || Math.abs(Math.abs(other.yaw) - Math.PI) < 0.01;
