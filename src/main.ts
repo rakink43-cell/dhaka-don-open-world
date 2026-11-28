@@ -399,17 +399,34 @@ function animate() {
       else velocity *= Math.pow(0.965, dt * 60);
       if (brake) velocity *= Math.pow(0.82, dt * 60);
       const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
-      steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
-      car.rotation.y += steer * (velocity / 24) * 1.65 * dt;
-      const nextX = car.position.x + Math.sin(car.rotation.y) * velocity * dt;
-      const nextZ = car.position.z + Math.cos(car.rotation.y) * velocity * dt;
-      let blocked = Math.abs(nextX) > 105 || Math.abs(nextZ) > 105 || hitsBuilding(nextX, nextZ, 1.35);
-      for (const actor of traffic) {
-        const dx = nextX - actor.x, dz = nextZ - actor.z;
-        if (dx * dx + dz * dz < (actor.radius + 1.25) ** 2) { blocked = true; break; }
+      // Smooth steering response; reverse movement naturally turns the car's
+      // travel direction opposite to its nose direction.
+      steer = THREE.MathUtils.lerp(steer, steerInput, 1 - Math.exp(-7 * dt));
+      const speedFactor = THREE.MathUtils.clamp(Math.abs(velocity) / 7, 0, 1);
+      car.rotation.y += steer * Math.sign(velocity) * speedFactor * 1.45 * dt;
+
+      // Sweep movement in short steps to reduce tunnelling through traffic and
+      // buildings. Resolve X/Z separately so a blocked turn can slide along an
+      // obstacle instead of snapping the car backwards.
+      const travelX = Math.sin(car.rotation.y) * velocity * dt;
+      const travelZ = Math.cos(car.rotation.y) * velocity * dt;
+      const steps = Math.max(1, Math.ceil(Math.hypot(travelX, travelZ) / 0.45));
+      const stepX = travelX / steps;
+      const stepZ = travelZ / steps;
+      let collided = false;
+      const canDriveTo = (x: number, z: number) => {
+        if (Math.abs(x) > 105 || Math.abs(z) > 105 || hitsBuilding(x, z, 1.35)) return false;
+        return !traffic.some(actor => Math.hypot(x - actor.x, z - actor.z) < actor.radius + 1.25);
+      };
+      for (let step = 0; step < steps; step++) {
+        const candidateX = car.position.x + stepX;
+        const candidateZ = car.position.z + stepZ;
+        if (canDriveTo(candidateX, car.position.z)) car.position.x = candidateX;
+        else collided = true;
+        if (canDriveTo(car.position.x, candidateZ)) car.position.z = candidateZ;
+        else collided = true;
       }
-      if (!blocked) { car.position.x = nextX; car.position.z = nextZ; }
-      else velocity *= -0.12;
+      if (collided) velocity *= Math.exp(-6 * dt);
       speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
       const actionButton = document.querySelector<HTMLButtonElement>('[data-action="toggle"]');
       if (actionButton) { actionButton.textContent = 'EXIT'; actionButton.disabled = false; }
