@@ -68,9 +68,7 @@ for (let x = -78; x <= 78; x += 26) {
     const d = 13 + random() * 7;
     const h = 8 + random() * 28;
     box(w, h, d, palette[Math.floor(random() * palette.length)], x, 0.14, z);
-    // Roof tank / rooftop room.
     if (random() > 0.45) box(w * 0.35, 2.1, d * 0.3, '#8c9695', x - 1, h + 0.14, z);
-    // Storefront color strip facing nearby road.
     if (Math.abs(z) < 44) box(w * 0.72, 1.2, 0.35, '#2d6b70', x, 1.2, z + Math.sign(z) * d * 0.52);
   }
 }
@@ -114,6 +112,90 @@ for (const x of [-1.08, 1.08]) for (const z of [-1.35, 1.35]) {
 car.position.set(0, 0.1, 5);
 scene.add(car);
 
+// Procedural Bangladeshi traffic: CNG, cycle-rickshaw, local bus and microbus.
+// Each vehicle has a simple physical footprint used by the player collision check.
+type TrafficKind = 'cng' | 'rickshaw' | 'bus' | 'microbus';
+type TrafficActor = { mesh: THREE.Group; x: number; z: number; yaw: number; speed: number; radius: number; kind: TrafficKind };
+const traffic: TrafficActor[] = [];
+const trafficMaterials = {
+  black: mat('#171b1c', 0.75), glass: mat('#18343c', 0.3), metal: mat('#a7b0b1', 0.45),
+  red: mat('#c53e32', 0.45), green: mat('#26815d', 0.45), yellow: mat('#e3b84e', 0.5),
+  blue: mat('#3479a5', 0.45), cream: mat('#e4d8bd', 0.55), trim: mat('#f2d56b', 0.5)
+};
+function part(parent: THREE.Group, w: number, h: number, d: number, material: THREE.Material, x: number, y: number, z: number) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+function trafficWheel(parent: THREE.Group, x: number, z: number, radius = 0.35) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.18, 10), trafficMaterials.black);
+  m.rotation.z = Math.PI / 2; m.position.set(x, radius, z); m.castShadow = true; parent.add(m);
+}
+function makeTraffic(kind: TrafficKind, x: number, z: number, yaw: number, speed: number) {
+  const g = new THREE.Group();
+  if (kind === 'cng') {
+    part(g, 1.45, 0.85, 2.0, trafficMaterials.green, 0, 0.85, 0);
+    part(g, 1.3, 0.62, 1.05, trafficMaterials.green, 0, 1.55, -0.15);
+    part(g, 1.18, 0.48, 0.08, trafficMaterials.glass, 0, 1.58, 0.39);
+    part(g, 1.2, 0.13, 0.12, trafficMaterials.yellow, 0, 1.15, 1.02);
+    part(g, 0.08, 0.8, 0.08, trafficMaterials.metal, -0.72, 1.35, 0.4);
+    part(g, 0.08, 0.8, 0.08, trafficMaterials.metal, 0.72, 1.35, 0.4);
+    for (const wx of [-0.78, 0.78]) for (const wz of [-0.65, 0.65]) trafficWheel(g, wx, wz, 0.28);
+    // CNG canopy roof and small side mirrors.
+    part(g, 1.52, 0.12, 1.2, trafficMaterials.yellow, 0, 2.0, -0.12);
+    part(g, 0.22, 0.07, 0.12, trafficMaterials.black, -0.85, 1.62, 0.48);
+    part(g, 0.22, 0.07, 0.12, trafficMaterials.black, 0.85, 1.62, 0.48);
+  } else if (kind === 'rickshaw') {
+    part(g, 0.72, 0.25, 1.7, trafficMaterials.red, 0, 1.0, -0.15);
+    part(g, 0.95, 0.14, 1.05, trafficMaterials.yellow, 0, 1.55, -0.35);
+    part(g, 0.82, 0.42, 0.12, trafficMaterials.red, 0, 1.28, -0.72);
+    part(g, 0.08, 0.55, 0.08, trafficMaterials.metal, -0.42, 1.25, 0.45);
+    part(g, 0.08, 0.55, 0.08, trafficMaterials.metal, 0.42, 1.25, 0.45);
+    trafficWheel(g, 0, 0.62, 0.32);
+    trafficWheel(g, -0.48, -0.68, 0.28); trafficWheel(g, 0.48, -0.68, 0.28);
+    part(g, 0.9, 0.1, 0.45, trafficMaterials.green, 0, 1.78, -0.35);
+    // Decorative canopy stripes.
+    for (let i = -2; i <= 2; i++) part(g, 0.12, 0.03, 0.88, trafficMaterials.trim, i * 0.17, 1.85, -0.35);
+  } else if (kind === 'bus') {
+    part(g, 2.45, 1.75, 6.3, trafficMaterials.blue, 0, 1.25, 0);
+    part(g, 2.25, 0.75, 5.8, trafficMaterials.cream, 0, 2.0, 0);
+    part(g, 2.3, 0.16, 6.0, trafficMaterials.red, 0, 1.62, 0);
+    for (let zWin = -2.35; zWin <= 2.4; zWin += 0.95) {
+      part(g, 0.05, 0.52, 0.72, trafficMaterials.glass, -1.16, 2.35, zWin);
+      part(g, 0.05, 0.52, 0.72, trafficMaterials.glass, 1.16, 2.35, zWin);
+    }
+    part(g, 1.6, 0.28, 0.08, trafficMaterials.yellow, 0, 2.92, 3.12);
+    // Local destination board: simple high-contrast DHAKA • LOCAL label.
+    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 96;
+    const ctx = canvas.getContext('2d');
+    if (ctx) { ctx.fillStyle = '#14232a'; ctx.fillRect(0, 0, 512, 96); ctx.fillStyle = '#f4d66e'; ctx.font = 'bold 54px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('DHAKA • LOCAL', 256, 67); }
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 0.27), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    sign.position.set(0, 2.92, 3.17); g.add(sign);
+    for (const wx of [-1.22, 1.22]) for (const wz of [-2.15, 2.15]) trafficWheel(g, wx, wz, 0.48);
+  } else {
+    part(g, 1.95, 0.85, 4.25, trafficMaterials.cream, 0, 0.95, 0);
+    part(g, 1.62, 0.78, 2.05, trafficMaterials.blue, 0, 1.72, -0.25);
+    part(g, 1.48, 0.58, 0.08, trafficMaterials.glass, 0, 1.78, 0.82);
+    part(g, 1.5, 0.12, 0.12, trafficMaterials.red, 0, 1.18, 2.12);
+    // Sliding-door seam and side windows.
+    part(g, 0.04, 0.72, 1.25, trafficMaterials.metal, 0.82, 1.5, -0.35);
+    for (const side of [-1, 1]) {
+      part(g, 0.05, 0.48, 0.72, trafficMaterials.glass, side * 0.83, 1.88, -0.65);
+      part(g, 0.05, 0.48, 0.72, trafficMaterials.glass, side * 0.83, 1.88, 0.18);
+      trafficWheel(g, side * 0.98, -1.35, 0.38); trafficWheel(g, side * 0.98, 1.35, 0.38);
+      part(g, 0.2, 0.08, 0.12, trafficMaterials.black, side * 1.05, 1.8, 0.92);
+    }
+  }
+  g.position.set(x, 0.1, z); g.rotation.y = yaw; scene.add(g);
+  const radius = kind === 'bus' ? 3.5 : kind === 'microbus' ? 2.4 : kind === 'cng' ? 1.45 : 1.2;
+  traffic.push({ mesh: g, x, z, yaw, speed, radius, kind });
+}
+makeTraffic('cng', -5.3, -34, 0, 4.5);
+makeTraffic('rickshaw', 4.8, 26, Math.PI, 2.2);
+makeTraffic('bus', 5.3, -72, 0, 3.0);
+makeTraffic('microbus', -5.2, 72, Math.PI, 5.2);
+makeTraffic('cng', 34, 5.2, -Math.PI / 2, 3.8);
+makeTraffic('rickshaw', -36, -5.2, Math.PI / 2, 1.8);
+
 const keys = new Set<string>();
 let started = false;
 let velocity = 0;
@@ -150,10 +232,29 @@ function animate() {
     const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
     steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
     car.rotation.y += steer * (velocity / 24) * 1.65 * dt;
-    car.position.x += Math.sin(car.rotation.y) * velocity * dt;
-    car.position.z += Math.cos(car.rotation.y) * velocity * dt;
-    car.position.x = THREE.MathUtils.clamp(car.position.x, -105, 105);
-    car.position.z = THREE.MathUtils.clamp(car.position.z, -105, 105);
+    const nextX = car.position.x + Math.sin(car.rotation.y) * velocity * dt;
+    const nextZ = car.position.z + Math.cos(car.rotation.y) * velocity * dt;
+    // Keep the player inside the blockout and stop the car before traffic overlap.
+    let blocked = Math.abs(nextX) > 105 || Math.abs(nextZ) > 105;
+    for (const actor of traffic) {
+      const dx = nextX - actor.x, dz = nextZ - actor.z;
+      if (dx * dx + dz * dz < (actor.radius + 1.25) ** 2) { blocked = true; break; }
+    }
+    if (!blocked) { car.position.x = nextX; car.position.z = nextZ; }
+    else velocity *= -0.12;
+    // Ambient traffic creeps along the local roads, then loops within the compact map.
+    for (const actor of traffic) {
+      if (Math.abs(actor.yaw) < 0.01 || Math.abs(Math.abs(actor.yaw) - Math.PI) < 0.01) {
+        actor.z += Math.cos(actor.yaw) * actor.speed * dt;
+        if (actor.z > 108) actor.z = -108;
+        if (actor.z < -108) actor.z = 108;
+      } else {
+        actor.x += Math.sin(actor.yaw) * actor.speed * dt;
+        if (actor.x > 108) actor.x = -108;
+        if (actor.x < -108) actor.x = 108;
+      }
+      actor.mesh.position.set(actor.x, 0.1, actor.z);
+    }
     speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
   }
   desiredCamera.set(car.position.x - Math.sin(car.rotation.y) * 10, car.position.y + 5.2, car.position.z - Math.cos(car.rotation.y) * 10);
