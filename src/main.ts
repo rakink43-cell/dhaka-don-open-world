@@ -297,9 +297,27 @@ function animate() {
     if (toggleQueued) {
       toggleQueued = false;
       if (!onFoot) {
-        onFoot = true; player.visible = true; car.visible = false;
-        player.position.set(car.position.x - 2.1, 0.12, car.position.z);
-        playerHeading = car.rotation.y;
+        // Try both sides of the vehicle, relative to its heading. Never spawn the
+        // player inside a building, pedestrian, or another vehicle.
+        const heading = car.rotation.y;
+        const sideX = Math.cos(heading), sideZ = -Math.sin(heading);
+        const exitSpots = [
+          { x: car.position.x + sideX * 2.2, z: car.position.z + sideZ * 2.2 },
+          { x: car.position.x - sideX * 2.2, z: car.position.z - sideZ * 2.2 },
+          { x: car.position.x - Math.sin(heading) * 3.0, z: car.position.z - Math.cos(heading) * 3.0 }
+        ];
+        const clearSpot = (spot: { x: number; z: number }) => {
+          if (Math.abs(spot.x) > 103 || Math.abs(spot.z) > 103 || hitsBuilding(spot.x, spot.z, 0.45)) return false;
+          if (pedestrians.some(p => Math.hypot(spot.x - p.mesh.position.x, spot.z - p.mesh.position.z) < 1.05)) return false;
+          if (traffic.some(a => Math.hypot(spot.x - a.x, spot.z - a.z) < a.radius + 0.85)) return false;
+          return true;
+        };
+        const exitSpot = exitSpots.find(clearSpot);
+        if (exitSpot) {
+          onFoot = true; player.visible = true; car.visible = false;
+          player.position.set(exitSpot.x, 0.12, exitSpot.z);
+          playerHeading = heading;
+        }
       } else {
         const nearCar = Math.hypot(player.position.x - car.position.x, player.position.z - car.position.z) < 4.2;
         if (nearCar) { onFoot = false; player.visible = false; car.visible = true; }
