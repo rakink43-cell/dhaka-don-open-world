@@ -196,6 +196,41 @@ makeTraffic('microbus', -5.2, 72, Math.PI, 5.2);
 makeTraffic('cng', 34, 5.2, -Math.PI / 2, 3.8);
 makeTraffic('rickshaw', -36, -5.2, Math.PI / 2, 1.8);
 
+// Low-poly Dhaka pedestrians on the footpaths (kept outside the vehicle lanes).
+type Pedestrian = { mesh: THREE.Group; limbs: THREE.Group[]; axis: 'z' | 'x'; fixed: number; progress: number; speed: number; phase: number };
+const pedestrians: Pedestrian[] = [];
+const shirtColors = ['#d94f42', '#e0b23d', '#327b9b', '#6d8b4d', '#a65c91', '#e8e1ce', '#df7b35'];
+const trouserColors = ['#263c4b', '#3e4548', '#55473b', '#29302f'];
+function makePedestrian(axis: 'z' | 'x', fixed: number, progress: number, index: number) {
+  const person = new THREE.Group();
+  const shirt = mat(shirtColors[index % shirtColors.length], 0.9);
+  const trousers = mat(trouserColors[index % trouserColors.length], 0.95);
+  const skin = mat(index % 3 === 0 ? '#9a6245' : index % 3 === 1 ? '#bd865f' : '#d19a70', 0.95);
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.72, 0.28), shirt);
+  torso.position.y = 1.15; torso.castShadow = true; person.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 8, 6), skin);
+  head.position.y = 1.67; head.castShadow = true; person.add(head);
+  const limbs: THREE.Group[] = [];
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Group(); arm.position.set(side * 0.31, 1.42, 0);
+    const armMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.55, 0.15), shirt);
+    armMesh.position.y = -0.25; armMesh.castShadow = true; arm.add(armMesh);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 6, 5), skin);
+    hand.position.y = -0.53; arm.add(hand); person.add(arm); limbs.push(arm);
+    const leg = new THREE.Group(); leg.position.set(side * 0.13, 0.82, 0);
+    const legMesh = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.62, 0.18), trousers);
+    legMesh.position.y = -0.31; legMesh.castShadow = true; leg.add(legMesh);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.28), trafficMaterials.black);
+    shoe.position.set(0, -0.62, 0.04); leg.add(shoe); person.add(leg); limbs.push(leg);
+  }
+  person.position.set(axis === 'z' ? fixed : progress, 0.12, axis === 'z' ? progress : fixed);
+  person.rotation.y = axis === 'z' ? (fixed < 0 ? Math.PI : 0) : (fixed < 0 ? -Math.PI / 2 : Math.PI / 2);
+  scene.add(person);
+  pedestrians.push({ mesh: person, limbs, axis, fixed, progress, speed: 0.65 + (index % 4) * 0.13, phase: index * 0.8 });
+}
+for (let i = 0; i < 12; i++) makePedestrian('z', i % 2 ? 10.6 : -10.6, -92 + i * 16.5, i);
+for (let i = 0; i < 8; i++) makePedestrian('x', i % 2 ? 10.6 : -10.6, -78 + i * 22, i + 12);
+
 const keys = new Set<string>();
 let started = false;
 let velocity = 0;
@@ -254,6 +289,19 @@ function animate() {
         if (actor.x < -108) actor.x = 108;
       }
       actor.mesh.position.set(actor.x, 0.1, actor.z);
+    }
+    // Walk pedestrians along sidewalk loops; swing arms and legs for a visible gait.
+    const walkTime = clock.elapsedTime;
+    for (const person of pedestrians) {
+      person.progress += person.speed * dt;
+      if (person.progress > 102) person.progress = -102;
+      if (person.axis === 'z') person.mesh.position.set(person.fixed, 0.12, person.progress);
+      else person.mesh.position.set(person.progress, 0.12, person.fixed);
+      const gait = Math.sin(walkTime * 5 + person.phase) * 0.38;
+      person.limbs[0].rotation.x = gait;
+      person.limbs[1].rotation.x = -gait;
+      person.limbs[2].rotation.x = -gait;
+      person.limbs[3].rotation.x = gait;
     }
     speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
   }
