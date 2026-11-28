@@ -270,6 +270,11 @@ let velocity = 0;
 let steer = 0;
 addEventListener('keydown', (e) => { keys.add(e.code); keys.add(e.key.toLowerCase()); if (e.code === 'KeyE' && !e.repeat) toggleQueued = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); keys.delete(e.key.toLowerCase()); });
+// Release all held controls when the tab loses focus or the mobile browser
+// interrupts a touch gesture; prevents unwanted continued movement.
+const releaseControls = () => keys.clear();
+addEventListener('blur', releaseControls);
+document.addEventListener('visibilitychange', () => { if (document.hidden) releaseControls(); });
 document.querySelector<HTMLButtonElement>('[data-action="toggle"]')?.addEventListener('click', (e) => { e.preventDefault(); toggleQueued = true; });
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
