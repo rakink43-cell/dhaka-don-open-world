@@ -231,11 +231,39 @@ function makePedestrian(axis: 'z' | 'x', fixed: number, progress: number, index:
 for (let i = 0; i < 12; i++) makePedestrian('z', i % 2 ? 10.6 : -10.6, -92 + i * 16.5, i);
 for (let i = 0; i < 8; i++) makePedestrian('x', i % 2 ? 10.6 : -10.6, -78 + i * 22, i + 12);
 
+// On-foot player avatar: toggle E to leave/enter the car.
+const player = new THREE.Group();
+const playerShirt = mat('#c94b3d', 0.85);
+const playerPants = mat('#263b4a', 0.9);
+const playerSkin = mat('#b77c57', 0.95);
+const playerTorso = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.78, 0.32), playerShirt);
+playerTorso.position.y = 1.25; playerTorso.castShadow = true; player.add(playerTorso);
+const playerHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), playerSkin);
+playerHead.position.y = 1.83; playerHead.castShadow = true; player.add(playerHead);
+const playerLimbs: THREE.Group[] = [];
+for (const side of [-1, 1]) {
+  const arm = new THREE.Group(); arm.position.set(side * 0.36, 1.55, 0);
+  const armMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.62, 0.17), playerShirt);
+  armMesh.position.y = -0.29; armMesh.castShadow = true; arm.add(armMesh); player.add(arm); playerLimbs.push(arm);
+  const leg = new THREE.Group(); leg.position.set(side * 0.16, 0.88, 0);
+  const legMesh = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.68, 0.2), playerPants);
+  legMesh.position.y = -0.32; legMesh.castShadow = true; leg.add(legMesh);
+  const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.3), trafficMaterials.black);
+  shoe.position.set(0, -0.67, 0.05); leg.add(shoe); player.add(leg); playerLimbs.push(leg);
+}
+player.position.set(-2.2, 0.12, 5);
+player.visible = false;
+scene.add(player);
+let onFoot = false;
+let playerHeading = 0;
+let walkPhase = 0;
+let toggleQueued = false;
+
 const keys = new Set<string>();
 let started = false;
 let velocity = 0;
 let steer = 0;
-addEventListener('keydown', (e) => { keys.add(e.code); keys.add(e.key.toLowerCase()); if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
+addEventListener('keydown', (e) => { keys.add(e.code); keys.add(e.key.toLowerCase()); if (e.code === 'KeyE' && !e.repeat) toggleQueued = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); keys.delete(e.key.toLowerCase()); });
 document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => {
   const key = button.dataset.key!;
@@ -260,23 +288,57 @@ function animate() {
     const left = keys.has('KeyA') || keys.has('a') || keys.has('ArrowLeft');
     const right = keys.has('KeyD') || keys.has('d') || keys.has('ArrowRight');
     const brake = keys.has('Space');
-    if (forward) velocity = Math.min(velocity + 15 * dt, 24);
-    else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
-    else velocity *= Math.pow(0.965, dt * 60);
-    if (brake) velocity *= Math.pow(0.82, dt * 60);
-    const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
-    steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
-    car.rotation.y += steer * (velocity / 24) * 1.65 * dt;
-    const nextX = car.position.x + Math.sin(car.rotation.y) * velocity * dt;
-    const nextZ = car.position.z + Math.cos(car.rotation.y) * velocity * dt;
-    // Keep the player inside the blockout and stop the car before traffic overlap.
-    let blocked = Math.abs(nextX) > 105 || Math.abs(nextZ) > 105;
-    for (const actor of traffic) {
-      const dx = nextX - actor.x, dz = nextZ - actor.z;
-      if (dx * dx + dz * dz < (actor.radius + 1.25) ** 2) { blocked = true; break; }
+    if (toggleQueued) {
+      toggleQueued = false;
+      if (!onFoot) {
+        onFoot = true; player.visible = true; car.visible = false;
+        player.position.set(car.position.x - 2.1, 0.12, car.position.z);
+        playerHeading = car.rotation.y;
+      } else {
+        const nearCar = Math.hypot(player.position.x - car.position.x, player.position.z - car.position.z) < 4.2;
+        if (nearCar) { onFoot = false; player.visible = false; car.visible = true; }
+      }
     }
-    if (!blocked) { car.position.x = nextX; car.position.z = nextZ; }
-    else velocity *= -0.12;
+    if (onFoot) {
+      const moveX = (right ? 1 : 0) - (left ? 1 : 0);
+      const moveZ = (forward ? 1 : 0) - (reverse ? 1 : 0);
+      const length = Math.hypot(moveX, moveZ);
+      if (length > 0) {
+        const nx = player.position.x + (moveX / length) * 5.2 * dt;
+        const nz = player.position.z + (moveZ / length) * 5.2 * dt;
+        let personBlocked = Math.abs(nx) > 103 || Math.abs(nz) > 103;
+        for (const actor of traffic) {
+          if (Math.hypot(nx - actor.x, nz - actor.z) < actor.radius + 0.65) { personBlocked = true; break; }
+        }
+        if (!personBlocked) { player.position.x = nx; player.position.z = nz; }
+        playerHeading = Math.atan2(moveX, moveZ);
+        walkPhase += dt * 7.5;
+      }
+      player.rotation.y = playerHeading;
+      const gait = length > 0 ? Math.sin(walkPhase) * 0.42 : 0;
+      playerLimbs[0].rotation.x = gait; playerLimbs[1].rotation.x = -gait;
+      playerLimbs[2].rotation.x = -gait; playerLimbs[3].rotation.x = gait;
+      velocity = 0;
+      speedLabel.textContent = 'WALK';
+    } else {
+      if (forward) velocity = Math.min(velocity + 15 * dt, 24);
+      else if (reverse) velocity = Math.max(velocity - 12 * dt, -7);
+      else velocity *= Math.pow(0.965, dt * 60);
+      if (brake) velocity *= Math.pow(0.82, dt * 60);
+      const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
+      steer = THREE.MathUtils.lerp(steer, steerInput, 5 * dt);
+      car.rotation.y += steer * (velocity / 24) * 1.65 * dt;
+      const nextX = car.position.x + Math.sin(car.rotation.y) * velocity * dt;
+      const nextZ = car.position.z + Math.cos(car.rotation.y) * velocity * dt;
+      let blocked = Math.abs(nextX) > 105 || Math.abs(nextZ) > 105;
+      for (const actor of traffic) {
+        const dx = nextX - actor.x, dz = nextZ - actor.z;
+        if (dx * dx + dz * dz < (actor.radius + 1.25) ** 2) { blocked = true; break; }
+      }
+      if (!blocked) { car.position.x = nextX; car.position.z = nextZ; }
+      else velocity *= -0.12;
+      speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
+    }
     // Ambient traffic creeps along the local roads, then loops within the compact map.
     for (const actor of traffic) {
       if (Math.abs(actor.yaw) < 0.01 || Math.abs(Math.abs(actor.yaw) - Math.PI) < 0.01) {
@@ -303,11 +365,14 @@ function animate() {
       person.limbs[2].rotation.x = -gait;
       person.limbs[3].rotation.x = gait;
     }
-    speedLabel.textContent = String(Math.round(Math.abs(velocity) * 3.6)).padStart(3, '0');
   }
-  desiredCamera.set(car.position.x - Math.sin(car.rotation.y) * 10, car.position.y + 5.2, car.position.z - Math.cos(car.rotation.y) * 10);
+  const focus = onFoot ? player.position : car.position;
+  const heading = onFoot ? playerHeading : car.rotation.y;
+  const followDistance = onFoot ? 6.2 : 10;
+  const followHeight = onFoot ? 3.5 : 5.2;
+  desiredCamera.set(focus.x - Math.sin(heading) * followDistance, focus.y + followHeight, focus.z - Math.cos(heading) * followDistance);
   camera.position.lerp(desiredCamera, 1 - Math.exp(-4 * dt));
-  camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
+  camera.lookAt(focus.x, focus.y + (onFoot ? 1.25 : 1), focus.z);
   renderer.render(scene, camera);
 }
 animate();
