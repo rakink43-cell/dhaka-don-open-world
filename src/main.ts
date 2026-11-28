@@ -343,21 +343,17 @@ function animate() {
       if (length > 0) {
         const nx = player.position.x + (moveX / length) * 5.2 * dt;
         const nz = player.position.z + (moveZ / length) * 5.2 * dt;
-        let personBlocked = Math.abs(nx) > 103 || Math.abs(nz) > 103;
-        for (const obstacle of buildingColliders) {
-          if (Math.abs(nx - obstacle.x) < obstacle.halfW + 0.35 && Math.abs(nz - obstacle.z) < obstacle.halfD + 0.35) { personBlocked = true; break; }
-        }
-        if (!personBlocked) for (const walker of pedestrians) {
-          const px = walker.mesh.position.x, pz = walker.mesh.position.z;
-          if (Math.hypot(nx - px, nz - pz) < 0.9) { personBlocked = true; break; }
-        }
-        // The player cannot walk through the vehicle they left, but can
-        // approach close enough to use the enter action.
-        if (Math.hypot(nx - car.position.x, nz - car.position.z) < 1.85) personBlocked = true;
-        for (const actor of traffic) {
-          if (Math.hypot(nx - actor.x, nz - actor.z) < actor.radius + 0.65) { personBlocked = true; break; }
-        }
-        if (!personBlocked) { player.position.x = nx; player.position.z = nz; }
+        const canWalkTo = (x: number, z: number) => {
+          if (Math.abs(x) > 103 || Math.abs(z) > 103 || hitsBuilding(x, z, 0.35)) return false;
+          if (pedestrians.some(walker => Math.hypot(x - walker.mesh.position.x, z - walker.mesh.position.z) < 0.9)) return false;
+          // Keep a safe gap from the parked car and moving traffic.
+          if (Math.hypot(x - car.position.x, z - car.position.z) < 1.85) return false;
+          return !traffic.some(actor => Math.hypot(x - actor.x, z - actor.z) < actor.radius + 0.65);
+        };
+        // Resolve axes independently so walking can slide along walls or NPCs
+        // instead of stopping completely during diagonal movement.
+        if (canWalkTo(nx, player.position.z)) player.position.x = nx;
+        if (canWalkTo(player.position.x, nz)) player.position.z = nz;
         playerHeading = Math.atan2(moveX, moveZ);
         walkPhase += dt * 7.5;
       }
@@ -418,11 +414,23 @@ function animate() {
     // Walk pedestrians along sidewalk loops; swing arms and legs for a visible gait.
     const walkTime = clock.elapsedTime;
     for (const person of pedestrians) {
-      person.progress += person.speed * dt;
+      const samePathAhead = pedestrians.some(other => {
+        if (other === person || other.axis !== person.axis || Math.abs(other.fixed - person.fixed) > 0.1) return false;
+        const gap = (other.progress - person.progress + 204) % 204;
+        return gap > 0.05 && gap < 2.0;
+      });
+      const activeX = onFoot ? player.position.x : car.position.x;
+      const activeZ = onFoot ? player.position.z : car.position.z;
+      const nearPlayerOrCar = Math.hypot(
+        (person.axis === 'z' ? person.fixed : person.progress) - activeX,
+        (person.axis === 'z' ? person.progress : person.fixed) - activeZ
+      ) < 2.6;
+      // Slow down for another pedestrian and pause briefly near the player/car.
+      if (!samePathAhead && !nearPlayerOrCar) person.progress += person.speed * dt;
       if (person.progress > 102) person.progress = -102;
       if (person.axis === 'z') person.mesh.position.set(person.fixed, 0.12, person.progress);
       else person.mesh.position.set(person.progress, 0.12, person.fixed);
-      const gait = Math.sin(walkTime * 5 + person.phase) * 0.38;
+      const gait = (!samePathAhead && !nearPlayerOrCar) ? Math.sin(walkTime * 5 + person.phase) * 0.38 : 0;
       person.limbs[0].rotation.x = gait;
       person.limbs[1].rotation.x = -gait;
       person.limbs[2].rotation.x = -gait;
