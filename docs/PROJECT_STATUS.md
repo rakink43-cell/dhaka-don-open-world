@@ -8,24 +8,24 @@ Phase 1 — playable traffic prototype
 ## Repository
 GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 
-## Implemented baseline
-- Vite + TypeScript + Three.js
-- Compact Dhaka-inspired blockout and third-person follow camera
+## Implemented
+- Vite + TypeScript + Three.js city blockout and third-person camera
 - Keyboard and mobile touch driving controls
-- Procedural sedan player vehicle
-- Procedural local traffic models: CNG, cycle-rickshaw, local bus and microbus
-- Bus destination board reading “DHAKA • LOCAL”
-- CNG canopy/mirror details, rickshaw canopy decoration and microbus side-window/door details
-- Ambient traffic movement on the blockout roads
-- Player vehicle collision blocking against traffic and map bounds
+- Player sedan prototype
+- Procedural local traffic: CNG, cycle-rickshaw, local bus and microbus
+- Local bus destination board: “DHAKA • LOCAL”
+- CNG canopy/mirror, rickshaw canopy and microbus window/door details
+- Ambient traffic movement and basic player-to-traffic/map-boundary blocking
+
+## Validation issue found and addressed
+The last GitHub Actions runs failed at the Node setup step because the workflow requested npm caching while the repository has no package-lock.json. Removed the setup-node npm cache option so CI can proceed with npm install without requiring a committed lockfile.
+
+The updated workflow commit is on main. A new successful CI run has not yet been confirmed.
 
 ## Not yet implemented
-- Production vehicle physics / suspension / tire model
-- Collision with all building geometry and robust traffic-to-traffic avoidance
-- Pedestrian / player character models and animation
-- Accurate Dhaka neighborhood layout, landmarks and Bengali shop sign pipeline
-- Missions, save system, minimap and gameplay progression
-- Cloudflare Pages deployment status has not been verified in this update
-
-## Validation
-The source changes were committed on 2026-11-28. GitHub Actions typecheck/build result and the live preview still need to be checked before this batch can be called verified.
+- Production vehicle physics, suspension and tire handling
+- Full building/traffic collision and traffic-to-traffic avoidance
+- Pedestrian and player character models/animation
+- Accurate Dhaka street layout, landmarks and Bengali signboards
+- Missions, save system and minimap
+- Verified Cloudflare Pages deployment for the current code
