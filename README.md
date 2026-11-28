@@ -11,7 +11,18 @@ A free-first, browser-based 3D open-world game inspired by Dhaka, Bangladesh.
 - Original assets and fictionalized/condensed city layout
 
 ## Development status
-**Phase 0 — Foundation**. This repository is being initialized with a lightweight playable blockout before detailed city assets are added.
+**Playable prototype — city blockout and first-person-on-foot exploration**
+
+Implemented so far:
+- Third-person vehicle driving and camera follow
+- Bangladeshi-inspired CNG, cycle-rickshaw, local bus, and microbus traffic
+- Low-poly pedestrians with walking animation
+- On-foot player avatar; press **E** or use the mobile action button to exit/enter the car
+- Basic walking collision with buildings, pedestrians, and traffic
+- Vehicle collision with traffic and building blocks
+- Ambient traffic spacing and player yielding
+
+Still in progress: richer Dhaka streets, detailed local buildings/shops, improved vehicle handling, sound, and device testing. The current map is a compact prototype, not a finished open-world city.
 
 ## Local development
 ```bash
