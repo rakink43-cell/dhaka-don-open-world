@@ -1,29 +1,31 @@
 # Project Status
 
-Updated: 2026-11-27
+Updated: 2026-11-28
 
 ## Current phase
-Phase 0 — foundation / visual blockout
+Phase 1 — playable traffic prototype
 
 ## Repository
 GitHub: https://github.com/rakink43-cell/dhaka-don-open-world
 
-## Current baseline
-- Vite + TypeScript starter
-- Three.js scene with a compact city-block placeholder
-- Third-person follow camera
-- Basic sedan placeholder and keyboard/touch input
-- Responsive HUD and project documentation
+## Implemented baseline
+- Vite + TypeScript + Three.js
+- Compact Dhaka-inspired blockout and third-person follow camera
+- Keyboard and mobile touch driving controls
+- Procedural sedan player vehicle
+- Procedural local traffic models: CNG, cycle-rickshaw, local bus and microbus
+- Bus destination board reading “DHAKA • LOCAL”
+- CNG canopy/mirror details, rickshaw canopy decoration and microbus side-window/door details
+- Ambient traffic movement on the blockout roads
+- Player vehicle collision blocking against traffic and map bounds
 
 ## Not yet implemented
-- Rapier vehicle physics
-- Accurate collision and road-boundary system
-- Proper CNG/rickshaw model
-- Real Dhaka neighborhood layout and landmarks
-- Bengali signboard asset pipeline
-- NPC traffic / pedestrians
-- Save, mission, minimap systems
-- Cloudflare Pages deployment
+- Production vehicle physics / suspension / tire model
+- Collision with all building geometry and robust traffic-to-traffic avoidance
+- Pedestrian / player character models and animation
+- Accurate Dhaka neighborhood layout, landmarks and Bengali shop sign pipeline
+- Missions, save system, minimap and gameplay progression
+- Cloudflare Pages deployment status has not been verified in this update
 
 ## Validation
-Build and typecheck are pending automated GitHub Actions validation. The code has not been executed in a local browser by this assistant in this step.
+The source changes were committed on 2026-11-28. GitHub Actions typecheck/build result and the live preview still need to be checked before this batch can be called verified.
